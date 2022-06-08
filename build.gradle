@@ -50,6 +50,10 @@ sourceSets {
 	}
 }
 
+configurations {
+	compile.exclude module: 'spring-boot-starter-logging'
+}
+
 List apache_common = [
 		'org.apache.commons:commons-lang3:3.11',
 		'commons-io:commons-io:2.8.0',
@@ -95,6 +99,10 @@ processResources {
 	setDuplicatesStrategy(DuplicatesStrategy.INCLUDE)
 }
 
+processTestResources {
+	setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
+
 task createProject {
 	doFirst {
 		sourceSets*.java.srcDirs*.each { it.mkdirs() }
@@ -104,6 +112,7 @@ task createProject {
 
 jar {
 	from(sourceSets.test.allJava) {
+		duplicatesStrategy = DuplicatesStrategy.INCLUDE
 		include 'test/jacg/*.java'
 		into '/'
 	}
@@ -111,10 +120,12 @@ jar {
 
 task test_jar(type: Jar) {
 	archiveName 'test.jar'
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	from(sourceSets.test.output) {
 		include 'test/call_graph/**'
 		into '/'
 	}
+
 }
 
 // 生成可以直接执行的jar包，并拷贝相关文件
@@ -218,3 +229,4 @@ publishing {
 signing {
 	sign publishing.publications.mavenJava
 }
+
