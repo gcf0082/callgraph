@@ -109,6 +109,11 @@ public class DbOperator {
 
     public void closeDs() {
         if (cpds != null) {
+            try {
+                cpds.getConnection().createStatement().execute("SHUTDOWN");;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
             cpds.close();
         }
     }
