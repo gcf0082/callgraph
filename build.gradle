@@ -92,8 +92,10 @@ List spring_boot = ['org.springframework.boot:spring-boot-starter', 'org.springf
 
 List java_sarif = ['com.contrastsecurity:java-sarif:2.0']
 
+List tinkergraph = ['org.apache.tinkerpop:tinkergraph-gremlin:3.6.0']
+
 dependencies {
-	implementation spring_boot, apache_common, c3p0, mysql, h2database, slf4j, bcel, jackson, dom4j, java_sarif
+	implementation spring_boot, apache_common, c3p0, mysql, h2database, slf4j, bcel, jackson, dom4j, java_sarif, tinkergraph
 	testImplementation 'org.springframework.boot:spring-boot-starter-test', log4j, junit
 }
 
