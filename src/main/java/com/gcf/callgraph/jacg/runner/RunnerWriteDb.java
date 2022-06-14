@@ -20,6 +20,13 @@ import com.gcf.callgraph.javacg.extensions.dto.ExtendedData;
 import com.gcf.callgraph.javacg.stat.JCallGraph;
 import com.gcf.callgraph.javacg.util.JavaCGUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tinkerpop.gremlin.process.traversal.IO;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1099,6 +1106,8 @@ public class RunnerWriteDb extends AbstractRunner {
             return;
         }
 
+        writeMethodCall2GraphDb();
+
         List<Object[]> tmpMethodCallList = genWriteDBList();
         methodCallList.clear();
 
@@ -1121,7 +1130,42 @@ public class RunnerWriteDb extends AbstractRunner {
                 // 记录执行失败的任务信息
                 recordTaskFail();
             }
+
+
         });
+    }
+
+    private void writeMethodCall2GraphDb() {
+        Graph graph = TinkerGraph.open();
+        GraphTraversalSource g = graph.traversal();
+        for (MethodCallEntity methodCallEntity : methodCallList) {
+            Vertex v1;
+            Vertex v2;
+
+            GraphTraversal tmp = g.V().hasId(methodCallEntity.getCallerMethodHash());
+            if (tmp.hasNext()) {
+                List<Vertex> tmp2 = tmp.toList();
+                v1 = tmp2.get(0);
+            } else {
+                v1 = graph.addVertex(T.label, "method",
+                        T.id, methodCallEntity.getCallerMethodHash(),
+                        "name", methodCallEntity.getCallerFullMethod());
+            }
+
+             tmp = g.V().hasId(methodCallEntity.getCalleeMethodHash());
+            if (tmp.hasNext()) {
+                List<Vertex> tmp2 = tmp.toList();
+                v2 = tmp2.get(0);
+            } else {
+                v2 = graph.addVertex(T.label, "method",
+                        T.id, methodCallEntity.getCalleeMethodHash(),
+                        "name", methodCallEntity.getFinalCalleeFullMethod());
+            }
+
+            v1.addEdge("call", v2);
+        }
+
+        g.io("extract2.graphml").with(IO.writer, IO.graphml).write().iterate();
     }
 
     /**
