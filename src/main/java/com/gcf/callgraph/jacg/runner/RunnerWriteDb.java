@@ -1106,7 +1106,7 @@ public class RunnerWriteDb extends AbstractRunner {
             return;
         }
 
-        writeMethodCall2GraphDb();
+        //writeMethodCall2GraphDb();
 
         List<Object[]> tmpMethodCallList = genWriteDBList();
         methodCallList.clear();
