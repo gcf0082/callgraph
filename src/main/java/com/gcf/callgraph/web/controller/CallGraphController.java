@@ -1,18 +1,18 @@
 package com.gcf.callgraph.web.controller;
+import com.gcf.callgraph.jacg.common.enums.OtherConfigFileUseSetEnum;
 import com.gcf.callgraph.jacg.conf.ConfInfo;
 import com.gcf.callgraph.jacg.conf.ConfManager;
+import com.gcf.callgraph.jacg.conf.ConfigureWrapper;
 import com.gcf.callgraph.jacg.dboper.DbOperator;
+import com.gcf.callgraph.jacg.model.CalleeMethod;
+import com.gcf.callgraph.jacg.model.Method;
+import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Caller;
 import com.gcf.callgraph.jacg.runner.RunnerWriteDb;
-import com.gcf.callgraph.web.model.CallMethod;
-import com.gcf.callgraph.web.model.Project;
-import com.gcf.callgraph.web.model.Result;
+import com.gcf.callgraph.web.model.*;
 import com.gcf.callgraph.web.utils.HandleResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 public class CallGraphController {
@@ -38,6 +38,29 @@ public class CallGraphController {
         } else {
             return HandleResult.buildFailed();
         }
+    }
+
+    @RequestMapping("/calleegraph")
+    public Method getCalleeGraph(){
+        ConfInfo confInfo = ConfManager.getConfInfo();
+        confInfo.setAppName("proj2");
+        confInfo.setCallGraphJarList(getProjectByName("proj2").getJar_paths());
+        ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLER_ENTRY_METHOD, new HashSet(Arrays.asList(
+                "org.apache.logging.log4j.core.net.JndiManager:getJndiManager(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.Properties)"
+        )));
+        RunnerGenAllGraph4Caller runner = new RunnerGenAllGraph4Caller();
+        runner.run();
+        return runner.getCallerGraph();
+        /*Method m1 = new Method();
+        m1.setFullMethod("com.huawei.Test.main");
+
+        Method m2 = new Method();
+        m2.setFullMethod("system");
+        CalleeMethod calleeMethod = new CalleeMethod();
+        calleeMethod.setCallee(m2);
+        calleeMethod.setLineNum(100);
+        m1.setCalleeMethods(Arrays.asList(calleeMethod));
+        return m1;*/
     }
 
     @PostMapping("/project/analysis")
@@ -66,6 +89,7 @@ public class CallGraphController {
         DbOperator.getInstance().closeDs();
         return projects;
     }
+
 
     @RequestMapping("/callee")
     public List<CallMethod> getCallee(@RequestParam("project_name") String project_name) {

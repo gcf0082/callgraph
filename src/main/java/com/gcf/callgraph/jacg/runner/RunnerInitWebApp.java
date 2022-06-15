@@ -24,7 +24,6 @@ public class RunnerInitWebApp extends AbstractRunner {
     @Override
     public void operate() {
         createTables();
-
     }
 
     private boolean createTables() {

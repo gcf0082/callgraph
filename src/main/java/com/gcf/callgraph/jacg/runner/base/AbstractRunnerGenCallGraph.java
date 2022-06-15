@@ -13,6 +13,7 @@ import com.gcf.callgraph.jacg.dto.annotation.AnnotationInfo4Read;
 import com.gcf.callgraph.jacg.dto.task.FindMethodInfo;
 import com.gcf.callgraph.jacg.extensions.annotation_handler.AbstractAnnotationHandler;
 import com.gcf.callgraph.jacg.extensions.annotation_handler.DefaultAnnotationHandler;
+import com.gcf.callgraph.jacg.model.Method;
 import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Callee;
 import com.gcf.callgraph.jacg.util.FileUtil;
 import com.gcf.callgraph.jacg.util.JACGUtil;
@@ -100,6 +101,12 @@ public abstract class AbstractRunnerGenCallGraph extends AbstractRunner {
 
     // 保存已生成的过方法文件名
     protected Map<String, Boolean> writtenFileNameMap = new ConcurrentHashMap<>();
+
+    protected Method callerGraph;
+
+    public Method getCallerGraph() {
+        return this.callerGraph;
+    }
 
     // 预检查
     @Override
