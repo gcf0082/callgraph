@@ -5,153 +5,34 @@ import React, { useState } from 'react';
 import { history } from 'umi';
 import { getCallerGraph } from '@/services/ant-design-pro/callgraph';
 
+let id = 0
+function insertNodeIntoTree(node, newNode) {
+    if (node.hasOwnProperty('callee')) {
+        newNode.data = {};
+        newNode.data.fullMethod = node.callee.fullMethod;
+        newNode.data.lineNum = node.lineNum;
+        if (node.callee.calleeMethods != null) {
+            newNode.children = new Array(node.callee.calleeMethods.length);
+            for (let i = 0; i < node.callee.calleeMethods.length; i++) {
+                newNode.children[i] = {}
+                insertNodeIntoTree(node.callee.calleeMethods[i], newNode.children[i]);
+            }
+        }
+    } else {
+        newNode.data = {};
+        newNode.data.fullMethod = node.fullMethod;
+    }
+    id++;
+    newNode.key = id;
 
-const treeData1 = `{
-    "data": {
-     "fullMethod": "org.apache.logging.log4j.core.net.JndiManager:getJndiManager(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.Properties)"
-    },
-    "key": 1,
-    "children": [
-     {
-      "data": {
-       "fullMethod": "org.apache.logging.log4j.core.net.JndiManager:createProperties(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.Properties)",
-       "lineNum": 85
-      },
-      "children": [
-       {
-        "data": {
-         "fullMethod": "java.util.Properties:<init>()",
-         "lineNum": 131
-        },
-        "key": 2
-       },
-       {
-        "data": {
-         "fullMethod": "java.util.Properties:setProperty(java.lang.String,java.lang.String)",
-         "lineNum": 132
-        },
-        "key": 3
-       },
-       {
-        "data": {
-         "fullMethod": "java.util.Properties:setProperty(java.lang.String,java.lang.String)",
-         "lineNum": 134
-        },
-        "key": 4
-       },
-       {
-        "data": {
-         "fullMethod": "org.apache.logging.log4j.Logger:warn(java.lang.String,java.lang.Object)",
-         "lineNum": 136
-        },
-        "key": 5
-       },
-       {
-        "data": {
-         "fullMethod": "java.util.Properties:setProperty(java.lang.String,java.lang.String)",
-         "lineNum": 140
-        },
-        "key": 6
-       },
-       {
-        "data": {
-         "fullMethod": "java.util.Properties:setProperty(java.lang.String,java.lang.String)",
-         "lineNum": 143
-        },
-        "key": 7
-       },
-       {
-        "data": {
-         "fullMethod": "java.util.Properties:setProperty(java.lang.String,java.lang.String)",
-         "lineNum": 145
-        },
-        "key": 8
-       },
-       {
-        "data": {
-         "fullMethod": "org.apache.logging.log4j.Logger:warn(java.lang.String,java.lang.Object)",
-         "lineNum": 147
-        },
-        "key": 9
-       },
-       {
-        "data": {
-         "fullMethod": "java.util.Properties:putAll(java.util.Map)",
-         "lineNum": 152
-        },
-        "key": 10
-       }
-      ],
-      "key": 11
-     },
-     {
-      "data": {
-       "fullMethod": "org.apache.logging.log4j.core.net.JndiManager:createManagerName()",
-       "lineNum": 87
-      },
-      "children": [
-       {
-        "data": {
-         "fullMethod": "java.lang.StringBuilder:<init>()",
-         "lineNum": 103
-        },
-        "key": 12
-       },
-       {
-        "data": {
-         "fullMethod": "java.lang.Class:getName()",
-         "lineNum": 103
-        },
-        "key": 13
-       },
-       {
-        "data": {
-         "fullMethod": "java.lang.StringBuilder:append(java.lang.String)",
-         "lineNum": 103
-        },
-        "key": 14
-       },
-       {
-        "data": {
-         "fullMethod": "java.lang.StringBuilder:append(char)",
-         "lineNum": 103
-        },
-        "key": 15
-       },
-       {
-        "data": {
-         "fullMethod": "java.lang.Object:hashCode()",
-         "lineNum": 103
-        },
-        "key": 16
-       },
-       {
-        "data": {
-         "fullMethod": "java.lang.StringBuilder:append(int)",
-         "lineNum": 103
-        },
-        "key": 17
-       },
-       {
-        "data": {
-         "fullMethod": "java.lang.StringBuilder:toString()",
-         "lineNum": 103
-        },
-        "key": 18
-       }
-      ],
-      "key": 19
-     },
-     {
-      "data": {
-       "fullMethod": "org.apache.logging.log4j.core.net.JndiManager:getManager(java.lang.String,org.apache.logging.log4j.core.appender.ManagerFactory,java.lang.Object)",
-       "lineNum": 87
-      },
-      "key": 20
-     }
-    ]
-   }`;
-
+    if (node.calleeMethods != null) {
+        newNode.children = new Array(node.calleeMethods.length);
+        for (let i = 0; i < node.calleeMethods.length; i++) {
+            newNode.children[i] = {}
+            insertNodeIntoTree(node.calleeMethods[i], newNode.children[i]);
+        }
+    }
+}
 
 const CallGraph = (props) => {
     const onSelect = (selectedKeys, info) => {
@@ -164,7 +45,11 @@ const CallGraph = (props) => {
 
     const getcaller = async () => {
         const result = await getCallerGraph();
-        setTreeData(result)
+        var newNode = {};
+        console.log(result);
+        insertNodeIntoTree(result, newNode);
+        console.log(newNode);
+        setTreeData([newNode]);
     }
 
     const [treeData, setTreeData] = useState([]);
