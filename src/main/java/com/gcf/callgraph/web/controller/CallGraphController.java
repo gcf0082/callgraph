@@ -6,6 +6,7 @@ import com.gcf.callgraph.jacg.conf.ConfigureWrapper;
 import com.gcf.callgraph.jacg.dboper.DbOperator;
 import com.gcf.callgraph.jacg.model.CalleeMethod;
 import com.gcf.callgraph.jacg.model.Method;
+import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Callee;
 import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Caller;
 import com.gcf.callgraph.jacg.runner.RunnerWriteDb;
 import com.gcf.callgraph.web.model.*;
@@ -40,27 +41,32 @@ public class CallGraphController {
         }
     }
 
-    @RequestMapping("/calleegraph")
-    public Method getCalleeGraph(){
+    @RequestMapping("/caller_graph")
+    public  Method getCallerGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
+        System.out.println("caller_graph");
         ConfInfo confInfo = ConfManager.getConfInfo();
-        confInfo.setAppName("proj2");
-        confInfo.setCallGraphJarList(getProjectByName("proj2").getJar_paths());
-        ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLER_ENTRY_METHOD, new HashSet(Arrays.asList(
-                "org.apache.logging.log4j.core.net.JndiManager:getJndiManager(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.Properties)"
+        confInfo.setAppName(project_name);
+        confInfo.setCallGraphJarList(getProjectByName(project_name).getJar_paths());
+        ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLER_ENTRY_METHOD, new HashSet<String>(Arrays.asList(
+                method
         )));
         RunnerGenAllGraph4Caller runner = new RunnerGenAllGraph4Caller();
         runner.run();
         return runner.getCallerGraph();
-        /*Method m1 = new Method();
-        m1.setFullMethod("com.huawei.Test.main");
+    }
 
-        Method m2 = new Method();
-        m2.setFullMethod("system");
-        CalleeMethod calleeMethod = new CalleeMethod();
-        calleeMethod.setCallee(m2);
-        calleeMethod.setLineNum(100);
-        m1.setCalleeMethods(Arrays.asList(calleeMethod));
-        return m1;*/
+    @RequestMapping("/callee_graph")
+    public Method getCalleeGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
+        System.out.println("callee_graph");
+        ConfInfo confInfo = ConfManager.getConfInfo();
+        confInfo.setAppName(project_name);
+        confInfo.setCallGraphJarList(getProjectByName(project_name).getJar_paths());
+        ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLEE_CLASS_NAME, new HashSet<String>(Arrays.asList(
+                method
+        )));
+        RunnerGenAllGraph4Callee runner = new RunnerGenAllGraph4Callee();
+        runner.run();
+        return runner.getCalleeGraph();
     }
 
     @PostMapping("/project/analysis")

@@ -108,6 +108,12 @@ public abstract class AbstractRunnerGenCallGraph extends AbstractRunner {
         return this.callerGraph;
     }
 
+    protected Method calleeGraph;
+
+    public Method getCalleeGraph() {
+        return this.calleeGraph;
+    }
+
     // 预检查
     @Override
     public boolean preCheck() {

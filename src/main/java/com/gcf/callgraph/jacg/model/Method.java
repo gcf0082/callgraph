@@ -49,4 +49,14 @@ public class Method {
         calleeMethod.setLineNum(lineNum);
         calleeMethods.add(calleeMethod);
     }
+
+    public void addCallerMethod(Method method, int lineNum) {
+        if (callerMethods == null) {
+            callerMethods = new ArrayList<CallerMethod>();
+        }
+        CallerMethod calleeMethod = new CallerMethod();
+        calleeMethod.setCaller(method);
+        calleeMethod.setLineNum(lineNum);
+        callerMethods.add(calleeMethod);
+    }
 }

@@ -9,6 +9,7 @@ import com.gcf.callgraph.jacg.dto.node.TmpNode4Callee;
 import com.gcf.callgraph.jacg.dto.task.CalleeTaskInfo;
 import com.gcf.callgraph.jacg.dto.task.CalleeTmpMethodInfo;
 import com.gcf.callgraph.jacg.dto.task.FindMethodInfo;
+import com.gcf.callgraph.jacg.model.Method;
 import com.gcf.callgraph.jacg.runner.base.AbstractRunnerGenCallGraph;
 import com.gcf.callgraph.jacg.util.FileUtil;
 import com.gcf.callgraph.jacg.util.JACGUtil;
@@ -447,6 +448,14 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
         TmpNode4Callee headNode = TmpNode4Callee.genNode(calleeMethodHash, null);
         node4CalleeList.add(headNode);
 
+
+        calleeGraph = new Method(calleeFullMethod);
+        Map<String, Method> hash_Method = new HashMap<String, Method>();
+
+        Method currentMethod;
+        Method method = calleeGraph;
+        hash_Method.put(calleeMethodHash, calleeGraph);
+
         // 记录当前处理的节点层级
         int currentNodeLevel = 0;
 
@@ -454,6 +463,7 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
 
         while (true) {
             TmpNode4Callee currentNode = node4CalleeList.get(currentNodeLevel);
+            currentMethod = hash_Method.get(currentNode.getCurrentCalleeMethodHash());
 
             // 查询当前节点的一个上层调用方法
             Map<String, Object> methodMapByCallee = queryOneByCalleeMethod(currentNode);
@@ -504,6 +514,16 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
             // 检查是否出现循环调用
             int back2Level = checkCycleCall(node4CalleeList, currentNodeLevel, currentCallerMethodHash);
 
+
+            if(!hash_Method.containsKey(methodMapByCallee.get(DC.MC_CALLER_METHOD_HASH))) {
+                method = new Method((String)methodMapByCallee.get(DC.MC_CALLER_FULL_METHOD));
+                hash_Method.put((String)methodMapByCallee.get(DC.MC_CALLER_METHOD_HASH), method);
+            } else {
+                method = hash_Method.get(methodMapByCallee.get(DC.MC_CALLER_METHOD_HASH));
+            }
+
+            currentMethod.addCallerMethod(method,
+                    (Integer) methodMapByCallee.get(DC.MC_CALLER_LINE_NUM));
             // 记录调用方法信息
             if (!recordCallerInfo(methodMapByCallee, currentNodeLevel, currentCallerMethodHash, back2Level, callerMethodList)) {
                 return false;
@@ -715,10 +735,12 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
             // # 2: 展示 完整类名+方法名
             columnSet.add(DC.MC_CALLER_FULL_CLASS_NAME);
             columnSet.add(DC.MC_CALLER_METHOD_NAME);
+            columnSet.add(DC.MC_CALLER_FULL_METHOD);
         } else {
             // # 3: 展示 简单类名（对于同名类展示完整类名）+方法名
             columnSet.add(DC.MC_CALLER_CLASS_NAME);
             columnSet.add(DC.MC_CALLER_METHOD_NAME);
+            columnSet.add(DC.MC_CALLER_FULL_METHOD);
         }
 
         if (confInfo.isShowCallerLineNum()) {
