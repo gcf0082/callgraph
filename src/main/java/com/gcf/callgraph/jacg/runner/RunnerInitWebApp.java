@@ -13,7 +13,28 @@ public class RunnerInitWebApp extends AbstractRunner {
     private static final Logger logger = LoggerFactory.getLogger(RunnerInitWebApp.class);
     @Override
     public boolean preCheck() {
+        if (confInfo.isDbUseH2() && !checkH2DbFile()) {
+            // 使用H2数据库时，检查H2数据库文件
+            return false;
+        }
+
         return true;
+    }
+
+    private boolean checkH2DbFile() {
+        File h2DbFile = getH2DbFile();
+        if (!h2DbFile.exists()) {
+            return true;
+        }
+
+        // 数据库文件存在
+        if (!h2DbFile.isFile()) {
+            logger.error("H2数据库文件不是文件 {}", FileUtil.getCanonicalPath(h2DbFile));
+            return false;
+        }
+
+        // 检查H2数据库文件是否可写
+        return checkH2DbFileWritable(h2DbFile);
     }
 
     @Override
