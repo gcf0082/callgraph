@@ -11,6 +11,9 @@ import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Callee;
 public class TestRunnerGenAllGraph4Callee {
 
     public static void main(String[] args) {
-        new RunnerGenAllGraph4Callee().run();
+        RunnerGenAllGraph4Callee runnerGenAllGraph4Callee = new RunnerGenAllGraph4Callee();
+        runnerGenAllGraph4Callee.run();
+        String json = runnerGenAllGraph4Callee.getCalleeGraphJson();
+        System.out.println(json);
     }
 }

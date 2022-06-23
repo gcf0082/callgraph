@@ -1,5 +1,7 @@
 package com.gcf.callgraph.jacg.runner;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gcf.callgraph.jacg.annotation.AnnotationStorage;
 import com.gcf.callgraph.jacg.common.DC;
 import com.gcf.callgraph.jacg.common.JACGConstants;
@@ -9,7 +11,6 @@ import com.gcf.callgraph.jacg.dto.node.TmpNode4Callee;
 import com.gcf.callgraph.jacg.dto.task.CalleeTaskInfo;
 import com.gcf.callgraph.jacg.dto.task.CalleeTmpMethodInfo;
 import com.gcf.callgraph.jacg.dto.task.FindMethodInfo;
-import com.gcf.callgraph.jacg.model.Method;
 import com.gcf.callgraph.jacg.runner.base.AbstractRunnerGenCallGraph;
 import com.gcf.callgraph.jacg.util.FileUtil;
 import com.gcf.callgraph.jacg.util.JACGUtil;
@@ -448,13 +449,10 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
         TmpNode4Callee headNode = TmpNode4Callee.genNode(calleeMethodHash, null);
         node4CalleeList.add(headNode);
 
-
-        calleeGraph = new Method(calleeFullMethod);
-        Map<String, Method> hash_Method = new HashMap<String, Method>();
-
-        Method currentMethod;
-        Method method = calleeGraph;
-        hash_Method.put(calleeMethodHash, calleeGraph);
+        mapper = new ObjectMapper();
+        treeNode = mapper.createObjectNode();
+        treeNode.put("method", calleeFullMethod);
+        headNode.setJsonNode(treeNode);
 
         // 记录当前处理的节点层级
         int currentNodeLevel = 0;
@@ -463,7 +461,6 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
 
         while (true) {
             TmpNode4Callee currentNode = node4CalleeList.get(currentNodeLevel);
-            currentMethod = hash_Method.get(currentNode.getCurrentCalleeMethodHash());
 
             // 查询当前节点的一个上层调用方法
             Map<String, Object> methodMapByCallee = queryOneByCalleeMethod(currentNode);
@@ -515,15 +512,8 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
             int back2Level = checkCycleCall(node4CalleeList, currentNodeLevel, currentCallerMethodHash);
 
 
-            if(!hash_Method.containsKey(methodMapByCallee.get(DC.MC_CALLER_METHOD_HASH))) {
-                method = new Method((String)methodMapByCallee.get(DC.MC_CALLER_FULL_METHOD));
-                hash_Method.put((String)methodMapByCallee.get(DC.MC_CALLER_METHOD_HASH), method);
-            } else {
-                method = hash_Method.get(methodMapByCallee.get(DC.MC_CALLER_METHOD_HASH));
-            }
+            ObjectNode tmpNode = currentNode.addCaller((String)methodMapByCallee.get(DC.MC_CALLER_FULL_METHOD), mapper);
 
-            currentMethod.addCallerMethod(method,
-                    (Integer) methodMapByCallee.get(DC.MC_CALLER_LINE_NUM));
             // 记录调用方法信息
             if (!recordCallerInfo(methodMapByCallee, currentNodeLevel, currentCallerMethodHash, back2Level, callerMethodList)) {
                 return false;
@@ -539,6 +529,7 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
 
             // 更新当前处理节点的callerMethodHash
             node4CalleeList.get(currentNodeLevel).setCurrentCallerMethodHash(currentCallerMethodHash);
+            //node4CalleeList.get(currentNodeLevel).setJsonNode(tmpNode);
 
             // 继续上一层处理
             currentNodeLevel++;
@@ -548,14 +539,17 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
                 // 上一层节点不存在，则需要添加，callerMethodHash设为null
                 TmpNode4Callee nextNode = TmpNode4Callee.genNode(currentCallerMethodHash, null);
                 node4CalleeList.add(nextNode);
+                nextNode.setJsonNode(tmpNode);
             } else {
                 // 上一层节点已存在，则修改值
                 TmpNode4Callee nextNode = node4CalleeList.get(currentNodeLevel);
                 nextNode.setCurrentCalleeMethodHash(currentCallerMethodHash);
                 nextNode.setCurrentCallerMethodHash(null);
+                nextNode.setJsonNode(tmpNode);
             }
         }
     }
+
 
     /**
      * 检查是否出现循环调用

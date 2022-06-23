@@ -1,5 +1,9 @@
 package com.gcf.callgraph.jacg.runner.base;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gcf.callgraph.jacg.annotation.AnnotationStorage;
 import com.gcf.callgraph.jacg.common.DC;
 import com.gcf.callgraph.jacg.common.JACGConstants;
@@ -13,7 +17,6 @@ import com.gcf.callgraph.jacg.dto.annotation.AnnotationInfo4Read;
 import com.gcf.callgraph.jacg.dto.task.FindMethodInfo;
 import com.gcf.callgraph.jacg.extensions.annotation_handler.AbstractAnnotationHandler;
 import com.gcf.callgraph.jacg.extensions.annotation_handler.DefaultAnnotationHandler;
-import com.gcf.callgraph.jacg.model.Method;
 import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Callee;
 import com.gcf.callgraph.jacg.util.FileUtil;
 import com.gcf.callgraph.jacg.util.JACGUtil;
@@ -102,17 +105,41 @@ public abstract class AbstractRunnerGenCallGraph extends AbstractRunner {
     // 保存已生成的过方法文件名
     protected Map<String, Boolean> writtenFileNameMap = new ConcurrentHashMap<>();
 
-    protected Method callerGraph;
 
-    public Method getCallerGraph() {
-        return this.callerGraph;
+
+    protected String calleeGraphJson;
+
+
+
+    public String getCallerGraphJson(){/*
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode callerGraphEntry = mapper.createObjectNode();
+        buildCallerGraphJson(callerGraphEntry, mapper, this.callerGraph);
+        String json = null;
+        try {
+            json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(callerGraphEntry);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return json;*/
+        return "";
     }
 
-    protected Method calleeGraph;
 
-    public Method getCalleeGraph() {
-        return this.calleeGraph;
+
+    protected ObjectMapper mapper ;
+    protected  ObjectNode treeNode;
+
+    public String getCalleeGraphJson() {
+
+        try {
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(treeNode);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
+
+
 
     // 预检查
     @Override

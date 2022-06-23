@@ -17,7 +17,6 @@ import com.gcf.callgraph.jacg.extensions.enums.ExtendedDataResultEnum;
 import com.gcf.callgraph.jacg.extensions.extended_data_add.ExtendedDataAddInterface;
 import com.gcf.callgraph.jacg.extensions.extended_data_supplement.ExtendedDataSupplementInterface;
 import com.gcf.callgraph.jacg.extensions.util.JsonUtil;
-import com.gcf.callgraph.jacg.model.Method;
 import com.gcf.callgraph.jacg.runner.base.AbstractRunnerGenCallGraph;
 import com.gcf.callgraph.jacg.util.FileUtil;
 import com.gcf.callgraph.jacg.util.JACGUtil;
@@ -808,7 +807,7 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
         // 初始加入最上层节点，id设为0（方法调用关系表最小id为1）
         TmpNode4Caller headNode = TmpNode4Caller.genNode(callerMethodHash, JACGConstants.METHOD_CALL_ID_START);
         node4CallerList.add(headNode);
-        Map<String, Method> hash_Method = new HashMap<String, Method>();
+
 
 
         // 记录当前处理的节点层级
@@ -819,11 +818,7 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
 
         // 在一个调用方法中出现多次的被调用方法（包含自定义数据），是否需要忽略
         boolean ignoreDupCalleeInOneCaller = confInfo.isIgnoreDupCalleeInOneCaller();
-        callerGraph = new Method(callerFullMethod);
 
-        Method currentMethod =  callerGraph;
-        Method method = callerGraph;
-        hash_Method.put(callerMethodHash, callerGraph);
 
         // 记录各个层级的调用方法中有被调用过的方法（包含方法注解、自定义数据）
         Map<Integer, Set<String>> recordedCalleeMap = null;
@@ -842,7 +837,6 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
             }
 
             TmpNode4Caller currentNode = node4CallerList.get(currentNodeLevel);
-            currentMethod = hash_Method.get(currentNode.getCurrentCalleeMethodHash());
 
             // 查询当前节点的一个下层被调用方法
             Map<String, Object> calleeMethodMap = queryOneCalleeMethod(currentNode, currentLineNumStart, currentLineNumEnd);
@@ -927,16 +921,6 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
             // 检查是否出现循环调用
             int back2Level = checkCycleCall(node4CallerList, currentNodeLevel, currentCalleeMethodHash);
 
-
-            if(!hash_Method.containsKey(calleeMethodMap.get(DC.MC_CALLEE_METHOD_HASH))) {
-                method = new Method((String)calleeMethodMap.get(DC.MC_CALLEE_FULL_METHOD));
-                hash_Method.put((String)calleeMethodMap.get(DC.MC_CALLEE_METHOD_HASH), method);
-            } else {
-                method = hash_Method.get(calleeMethodMap.get(DC.MC_CALLEE_METHOD_HASH));
-            }
-
-            currentMethod.addCalleeMethod(method,
-                    (Integer) calleeMethodMap.get(DC.MC_CALLER_LINE_NUM));
             // 记录被调用方法信息
             if (!recordCalleeInfo(calleeMethodMap, currentNodeLevel, back2Level, out, currentMethodCallId, calleeInfo)) {
                 return false;

@@ -36,8 +36,8 @@ public abstract class TestRunByCodeBase {
                 "test.call_graph.argument",
                 "java.")));
         ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLEE_CLASS_NAME, new HashSet(Arrays.asList(
-                "TestMCCallee",
-                "System")));
+                "test.call_graph.method_call.TestMCCallee:test_gcf_4"
+                )));
         ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLER_ENTRY_METHOD, new HashSet(Arrays.asList(
                 "TestMCCaller:test1a",
                 "TestMCCaller:test1b",

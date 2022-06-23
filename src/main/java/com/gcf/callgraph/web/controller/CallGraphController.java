@@ -4,8 +4,6 @@ import com.gcf.callgraph.jacg.conf.ConfInfo;
 import com.gcf.callgraph.jacg.conf.ConfManager;
 import com.gcf.callgraph.jacg.conf.ConfigureWrapper;
 import com.gcf.callgraph.jacg.dboper.DbOperator;
-import com.gcf.callgraph.jacg.model.CalleeMethod;
-import com.gcf.callgraph.jacg.model.Method;
 import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Callee;
 import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Caller;
 import com.gcf.callgraph.jacg.runner.RunnerWriteDb;
@@ -42,7 +40,7 @@ public class CallGraphController {
     }
 
     @RequestMapping("/caller_graph")
-    public  Method getCallerGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
+    public  String getCallerGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
         System.out.println("caller_graph");
         ConfInfo confInfo = ConfManager.getConfInfo();
         confInfo.setAppName(project_name);
@@ -52,11 +50,11 @@ public class CallGraphController {
         )));
         RunnerGenAllGraph4Caller runner = new RunnerGenAllGraph4Caller();
         runner.run();
-        return runner.getCallerGraph();
+        return runner.getCallerGraphJson();
     }
 
     @RequestMapping("/callee_graph")
-    public Method getCalleeGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
+    public String getCalleeGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
         System.out.println("callee_graph");
         ConfInfo confInfo = ConfManager.getConfInfo();
         confInfo.setAppName(project_name);
@@ -66,7 +64,8 @@ public class CallGraphController {
         )));
         RunnerGenAllGraph4Callee runner = new RunnerGenAllGraph4Callee();
         runner.run();
-        return runner.getCalleeGraph();
+        System.out.println(runner.getCalleeGraphJson());
+        return runner.getCalleeGraphJson();
     }
 
     @PostMapping("/project/analysis")

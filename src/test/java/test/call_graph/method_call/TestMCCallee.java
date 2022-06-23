@@ -30,4 +30,29 @@ public class TestMCCallee {
         System.out.println(s1);
         return "";
     }
+
+    public static void test_gcf_1() {
+        test_gcf_4();
+    }
+
+    public static void test_gcf_2() {
+        test_gcf_1();
+    }
+
+    public static void test_gcf_3() {
+        test_gcf_1();
+        test_gcf_5();
+    }
+
+    public static void test_gcf_4() {
+        test_gcf_3();
+    }
+
+    public static void test_gcf_5() {
+        test_gcf_4();
+    }
+
+    public static void test_gcf_6() {
+        test_gcf_5();
+    }
 }
