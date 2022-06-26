@@ -1,5 +1,7 @@
 package com.gcf.callgraph.jacg.runner;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gcf.callgraph.jacg.annotation.AnnotationStorage;
 import com.gcf.callgraph.jacg.common.DC;
 import com.gcf.callgraph.jacg.common.JACGConstants;
@@ -808,7 +810,11 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
         TmpNode4Caller headNode = TmpNode4Caller.genNode(callerMethodHash, JACGConstants.METHOD_CALL_ID_START);
         node4CallerList.add(headNode);
 
-
+        mapper = new ObjectMapper();
+        treeNode = mapper.createObjectNode();
+        treeNode.put("method_hash", callerMethodHash);
+        treeNode.put("method_full", callerFullMethod);
+        headNode.setJsonNode(treeNode);
 
         // 记录当前处理的节点层级
         int currentNodeLevel = 0;
@@ -921,6 +927,8 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
             // 检查是否出现循环调用
             int back2Level = checkCycleCall(node4CallerList, currentNodeLevel, currentCalleeMethodHash);
 
+            ObjectNode tmpNode = currentNode.addCallee(calleeMethodMap, mapper);
+
             // 记录被调用方法信息
             if (!recordCalleeInfo(calleeMethodMap, currentNodeLevel, back2Level, out, currentMethodCallId, calleeInfo)) {
                 return false;
@@ -957,11 +965,13 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
                 // 下一层节点不存在，则需要添加，id设为0（方法调用关系表最小id为1）
                 TmpNode4Caller nextNode = TmpNode4Caller.genNode(currentCalleeMethodHash, JACGConstants.METHOD_CALL_ID_START);
                 node4CallerList.add(nextNode);
+                nextNode.setJsonNode(tmpNode);
             } else {
                 // 下一层节点已存在，则修改值
                 TmpNode4Caller nextNode = node4CallerList.get(currentNodeLevel);
                 nextNode.setCurrentCalleeMethodHash(currentCalleeMethodHash);
                 nextNode.setCurrentCalleeMethodId(JACGConstants.METHOD_CALL_ID_START);
+                nextNode.setJsonNode(tmpNode);
             }
         }
     }

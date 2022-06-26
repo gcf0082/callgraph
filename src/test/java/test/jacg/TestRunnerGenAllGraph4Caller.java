@@ -1,6 +1,11 @@
 package test.jacg;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Caller;
+
+import java.util.List;
 
 /**
  * @author adrninistrator
@@ -10,7 +15,11 @@ import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Caller;
 
 public class TestRunnerGenAllGraph4Caller {
 
+
     public static void main(String[] args) {
-        new RunnerGenAllGraph4Caller().run();
+        RunnerGenAllGraph4Caller runnerGenAllGraph4Caller =  new RunnerGenAllGraph4Caller();
+        runnerGenAllGraph4Caller.run();
+        String json = runnerGenAllGraph4Caller.getCalleeGraphJson();
+        System.out.print(json);
     }
 }

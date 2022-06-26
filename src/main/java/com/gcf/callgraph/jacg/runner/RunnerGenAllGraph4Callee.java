@@ -451,7 +451,8 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
 
         mapper = new ObjectMapper();
         treeNode = mapper.createObjectNode();
-        treeNode.put("method", calleeFullMethod);
+        treeNode.put("method_hash", calleeMethodHash);
+        treeNode.put("method_full", calleeFullMethod);
         headNode.setJsonNode(treeNode);
 
         // 记录当前处理的节点层级
@@ -512,7 +513,7 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
             int back2Level = checkCycleCall(node4CalleeList, currentNodeLevel, currentCallerMethodHash);
 
 
-            ObjectNode tmpNode = currentNode.addCaller((String)methodMapByCallee.get(DC.MC_CALLER_FULL_METHOD), mapper);
+            ObjectNode tmpNode = currentNode.addCaller(methodMapByCallee, mapper);
 
             // 记录调用方法信息
             if (!recordCallerInfo(methodMapByCallee, currentNodeLevel, currentCallerMethodHash, back2Level, callerMethodList)) {

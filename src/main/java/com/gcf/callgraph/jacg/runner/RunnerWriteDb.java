@@ -21,6 +21,7 @@ import com.gcf.callgraph.javacg.stat.JCallGraph;
 import com.gcf.callgraph.javacg.util.JavaCGUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.IO;
+import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -97,6 +98,9 @@ public class RunnerWriteDb extends AbstractRunner {
     // 方法代码行号输出文件路径
     private String callGraphLineNumberOutputFilePath = null;
 
+    Graph graph ;
+    GraphTraversalSource g ;
+
     static {
         runner = new RunnerWriteDb();
     }
@@ -127,6 +131,9 @@ public class RunnerWriteDb extends AbstractRunner {
         if (!readOtherConfig()) {
             return false;
         }
+
+        graph = TinkerGraph.open();
+        g = graph.traversal();
         return true;
     }
 
@@ -1136,15 +1143,15 @@ public class RunnerWriteDb extends AbstractRunner {
     }
 
     private void writeMethodCall2GraphDb() {
-        Graph graph = TinkerGraph.open();
-        GraphTraversalSource g = graph.traversal();
+        //Graph graph = TinkerGraph.open();
+        //GraphTraversalSource g = graph.traversal();
         for (MethodCallEntity methodCallEntity : methodCallList) {
             Vertex v1;
             Vertex v2;
 
             GraphTraversal tmp = g.V().hasId(methodCallEntity.getCallerMethodHash());
             if (tmp.hasNext()) {
-                List<Vertex> tmp2 = tmp.toList();
+                List<Vertex> tmp2 =tmp.toList();
                 v1 = tmp2.get(0);
             } else {
                 v1 = graph.addVertex(T.label, "method",
@@ -1161,8 +1168,10 @@ public class RunnerWriteDb extends AbstractRunner {
                         T.id, methodCallEntity.getCalleeMethodHash(),
                         "name", methodCallEntity.getFinalCalleeFullMethod());
             }
-
-            v1.addEdge("call", v2);
+            List<Path> path = g.V().hasId(methodCallEntity.getCallerMethodHash()).out().hasId(methodCallEntity.getCalleeMethodHash()).path().toList();
+            if (path.isEmpty()) {
+                v1.addEdge("call", v2);
+            }
         }
 
         g.io("extract2.graphml").with(IO.writer, IO.graphml).write().iterate();

@@ -7,29 +7,29 @@ import { getCallerGraph } from '@/services/ant-design-pro/callgraph';
 
 let id = 0
 function insertNodeIntoTree(node, newNode) {
-    if (node.hasOwnProperty('callee')) {
+    if (node.hasOwnProperty('lineNum')) {
         newNode.data = {};
-        newNode.data.fullMethod = node.callee.fullMethod;
+        newNode.data.fullMethod = node.method_full;
         newNode.data.lineNum = node.lineNum;
-        if (node.callee.calleeMethods != null) {
-            newNode.children = new Array(node.callee.calleeMethods.length);
-            for (let i = 0; i < node.callee.calleeMethods.length; i++) {
+        if (node.children != null) {
+            newNode.children = new Array(node.children.length);
+            for (let i = 0; i < node.children.length; i++) {
                 newNode.children[i] = {}
-                insertNodeIntoTree(node.callee.calleeMethods[i], newNode.children[i]);
+                insertNodeIntoTree(node.children[i], newNode.children[i]);
             }
         }
     } else {
         newNode.data = {};
-        newNode.data.fullMethod = node.fullMethod;
+        newNode.data.fullMethod = node.method_full;
     }
     id++;
     newNode.key = id;
 
-    if (node.calleeMethods != null) {
-        newNode.children = new Array(node.calleeMethods.length);
-        for (let i = 0; i < node.calleeMethods.length; i++) {
+    if (node.children != null) {
+        newNode.children = new Array(node.children.length);
+        for (let i = 0; i < node.children.length; i++) {
             newNode.children[i] = {}
-            insertNodeIntoTree(node.calleeMethods[i], newNode.children[i]);
+            insertNodeIntoTree(node.children[i], newNode.children[i]);
         }
     }
 }
@@ -40,7 +40,7 @@ const CallGraph = (props) => {
     };
 
     const titleRender = ({ title, key, data }) => {
-        return <div>{data.fullMethod} </div>;
+        return <div>{data.lineNum}:{data.fullMethod} </div>;
     }
 
     const getcaller = async () => {

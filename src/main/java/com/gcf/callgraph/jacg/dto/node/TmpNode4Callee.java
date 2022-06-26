@@ -3,6 +3,9 @@ package com.gcf.callgraph.jacg.dto.node;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.gcf.callgraph.jacg.common.DC;
+
+import java.util.Map;
 
 /**
  * @author adrninistrator
@@ -50,16 +53,18 @@ public class TmpNode4Callee {
         this.jsonNode = jsonNode;
     }
 
-    public ObjectNode addCaller(String methodHash, ObjectMapper mapper){
+    public ObjectNode addCaller(Map<String, Object> methodMapByCallee, ObjectMapper mapper){
         ObjectNode tmpnode = mapper.createObjectNode();
-        tmpnode.put("method", methodHash);
+        tmpnode.put("method_hash", (String)methodMapByCallee.get(DC.MC_CALLER_METHOD_HASH));
+        tmpnode.put("method_full", (String)methodMapByCallee.get(DC.MC_CALLER_FULL_METHOD));
+        tmpnode.put("lineNum", (int)methodMapByCallee.get(DC.MC_CALLER_LINE_NUM));
         if (jsonNode.has("children")) {
             jsonNode.withArray("children").add(tmpnode);
         } else {
             ArrayNode children = mapper.createArrayNode();
 
             children.add(tmpnode);
-            jsonNode.put("children", children);
+            jsonNode.set("children", children);
         }
         return tmpnode;
     }
