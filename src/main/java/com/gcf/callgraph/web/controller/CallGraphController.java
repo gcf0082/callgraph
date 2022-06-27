@@ -49,6 +49,7 @@ public class CallGraphController {
                 method
         )));
         RunnerGenAllGraph4Caller runner = new RunnerGenAllGraph4Caller();
+        runner.setSupportIgnore(true);
         runner.run();
         return runner.getCallerGraphJson();
     }
@@ -103,12 +104,24 @@ public class CallGraphController {
                 "(SELECT full_name from handled_class_name_%s) order by callee_full_method", project_name, project_name);
         DbOperator.getInstance().init(ConfManager.getConfInfo());
         List<Map<String, Object>> list = DbOperator.getInstance().queryList(sql, null);
+        Set<String> ignoreFullMethodPrefixSet = ConfigureWrapper.getOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLER_IGNORE_FULL_METHOD_PREFIX);
         List<CallMethod> callees = new ArrayList<CallMethod>();
         for(Map<String, Object> map : list) {
             String callerMethod = (String)map.get("caller_full_method");
             String callerClass = (String)map.get("caller_full_class_name");
             String calleeMethod = (String)map.get("callee_full_method");
             int lineNum = (Integer) map.get("caller_line_num");
+
+            boolean found = false;
+            for (String ignoreMehod : ignoreFullMethodPrefixSet) {
+                if (calleeMethod.startsWith(ignoreMehod)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                continue;
+            }
 
             CallMethod callMehod = new CallMethod();
             callMehod.setCalleeMethod(calleeMethod);

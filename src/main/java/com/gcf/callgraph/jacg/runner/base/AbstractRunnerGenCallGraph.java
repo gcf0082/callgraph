@@ -111,18 +111,16 @@ public abstract class AbstractRunnerGenCallGraph extends AbstractRunner {
 
 
 
-    public String getCallerGraphJson(){/*
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode callerGraphEntry = mapper.createObjectNode();
-        buildCallerGraphJson(callerGraphEntry, mapper, this.callerGraph);
+    public String getCallerGraphJson(){
+
         String json = null;
         try {
-            json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(callerGraphEntry);
+            json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(treeNode);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        return json;*/
-        return "";
+        return json;
+
     }
 
 
