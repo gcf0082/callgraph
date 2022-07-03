@@ -96,7 +96,46 @@ public class CallGraphController {
         return projects;
     }
 
+    @RequestMapping("/source_file")
+    public SourceFile getSourceFile(@RequestParam("project_name") String projectName,
+                                    @RequestParam("class") String className,
+                                    @RequestParam("linenum") int lineNumber) {
+        String content = SourceUtil.getSourceContentByClassName(projectName, className);
+        SourceFile sourceFile = new SourceFile();
+        sourceFile.setFile_content(content);
+        sourceFile.setLineNum(lineNumber);
+        return sourceFile;
+    }
 
+    //
+    @RequestMapping(value = "/callees_method", produces = MediaType.APPLICATION_JSON_VALUE)
+    public  List<String> getAllCallees(@RequestParam("project_name") String project_name) {
+        String sql = String.format("SELECT DISTINCT callee_full_method" +
+                " from method_call_%s where callee_full_class_name not in" +
+                "(SELECT full_name from handled_class_name_%s) order by callee_full_method", project_name, project_name);
+        DbOperator.getInstance().init(ConfManager.getConfInfo());
+        List<Map<String, Object>> list = DbOperator.getInstance().queryList(sql, null);
+        Set<String> ignoreFullMethodPrefixSet = ConfigureWrapper.getOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLER_IGNORE_FULL_METHOD_PREFIX);
+        List<String> callees = new ArrayList<String>();
+        for(Map<String, Object> map : list) {
+            String calleeMethod = (String)map.get("callee_full_method");
+
+
+            boolean found = false;
+            for (String ignoreMehod : ignoreFullMethodPrefixSet) {
+                if (calleeMethod.startsWith(ignoreMehod)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                continue;
+            }
+            callees.add(calleeMethod);
+        }
+        DbOperator.getInstance().closeDs();
+        return callees;
+    }
     @RequestMapping("/callee")
     public List<CallMethod> getCallee(@RequestParam("project_name") String project_name) {
         String sql = String.format("SELECT caller_full_method,caller_full_class_name, callee_full_method,caller_line_num" +
