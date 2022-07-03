@@ -5,9 +5,10 @@ import { IActionBarItemProps, ITreeNodeItemProps } from '@dtinsight/molecule/esm
 import { Header, Content } from '@dtinsight/molecule/esm/workbench/sidebar';
 import { ICollapseItem } from '@dtinsight/molecule/esm/components/collapse';
 import API from '../../api';
-import { Button, Input, Tree, Select,List } from 'antd'
+import { Button, Input, Tree, Select,List} from 'antd'
 import InfiniteScroll from 'react-infinite-scroll-component';
 import 'antd/dist/antd.dark.css';
+import { NONAME } from 'dns';
 
 const Toolbar = molecule.component.Toolbar;
 const Collapse = molecule.component.Collapse;
@@ -85,15 +86,15 @@ export function OverviewView() {
         <div     style={{
             height: 1000,
             overflow: 'auto',
-            padding: '0 16px',
-            border: '1px solid rgba(140, 140, 140, 0.35)',
+            WebkitUserSelect:'text',
+            MozUserSelect:'text',
+            msUserSelect:'text'
           }}>
             <Button onClick={() => fetchCallees()}>获取所有调用函数</Button>
-
             <List
                 size="small"
                 dataSource={callees}
-                renderItem={item => <List.Item><Button>go</Button>{item}</List.Item>}  
+                renderItem={item => <List.Item>{item}</List.Item>}  
                  
             />
 
