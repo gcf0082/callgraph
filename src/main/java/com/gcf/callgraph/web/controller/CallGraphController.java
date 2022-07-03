@@ -10,6 +10,7 @@ import com.gcf.callgraph.jacg.runner.RunnerWriteDb;
 import com.gcf.callgraph.web.model.*;
 import com.gcf.callgraph.web.utils.HandleResult;
 import com.gcf.callgraph.web.utils.SourceUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,7 +42,7 @@ public class CallGraphController {
         }
     }
 
-    //»ñÈ¡Ä³¸öº¯ÊıÏòÏÂµ÷ÓÃÁ´
+    //è·å–æŸä¸ªå‡½æ•°å‘ä¸‹è°ƒç”¨é“¾
     @RequestMapping("/caller_graph")
     public  String getCallerGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
         System.out.println("caller_graph");
@@ -57,7 +58,7 @@ public class CallGraphController {
         return runner.getCallerGraphJson();
     }
 
-    //»ñÈ¡µ¥¸öº¯ÊıÏòÉÏµ÷ÓÃÁ´
+    //è·å–å•ä¸ªå‡½æ•°å‘ä¸Šè°ƒç”¨é“¾
     @RequestMapping("/callee_graph")
     public String getCalleeGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
         System.out.println("callee_graph");
@@ -111,7 +112,7 @@ public class CallGraphController {
         return sourceFile;
     }
 
-    //
+    //è·å–æ‰€æœ‰è¢«è°ƒç”¨å‡½æ•°ååˆ—è¡¨
     @RequestMapping(value = "/callees_method", produces = MediaType.APPLICATION_JSON_VALUE)
     public  List<String> getAllCallees(@RequestParam("project_name") String project_name) {
         String sql = String.format("SELECT DISTINCT callee_full_method" +
@@ -142,12 +143,17 @@ public class CallGraphController {
     }
 
 
-    //»ñÈ¡ËùÓĞµÄµ÷ÓÃÍâ²¿º¯ÊıÁĞ±í
+    //è·å–æ‰€æœ‰çš„è°ƒç”¨å¤–éƒ¨å‡½æ•°åˆ—è¡¨,å¦‚æœæ˜¯å‡½æ•°ï¼ŒåŒ¹é…å‡½æ•°åå¼€å¤´
     @RequestMapping("/callee")
-    public List<CallMethod> getCallee(@RequestParam("project_name") String project_name) {
+    public List<CallMethod> getCallee(@RequestParam("project_name") String project_name,
+                                      @RequestParam(value="method", required = false) String method) {
         String sql = String.format("SELECT caller_full_method,caller_full_class_name, callee_full_method,caller_line_num" +
                 " from method_call_%s where callee_full_class_name not in" +
                 "(SELECT full_name from handled_class_name_%s) order by callee_full_method", project_name, project_name);
+        if (!StringUtils.isEmpty(method)) {
+            sql = String.format("SELECT caller_full_method,caller_full_class_name, callee_full_method,caller_line_num" +
+                    " from method_call_%s where callee_full_method like '%s%%'", project_name, method);
+        }
         DbOperator.getInstance().init(ConfManager.getConfInfo());
         List<Map<String, Object>> list = DbOperator.getInstance().queryList(sql, null);
         Set<String> ignoreFullMethodPrefixSet = ConfigureWrapper.getOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLER_IGNORE_FULL_METHOD_PREFIX);
