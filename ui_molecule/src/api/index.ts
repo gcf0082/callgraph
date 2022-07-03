@@ -15,6 +15,10 @@ const api = {
     getDataSource() {
         return http.get(`${basePath}/dataSource.json`);
     },
+    
+    getCallees() {
+        return http.get(`${basePath}/callees_method?project_name=log4j`);        
+    },
 
     getCallerGraph(method: string) {
         //return http.get(`${basePath}/callerGraph.json`);

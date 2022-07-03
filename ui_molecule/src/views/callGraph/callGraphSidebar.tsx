@@ -5,7 +5,8 @@ import { IActionBarItemProps, ITreeNodeItemProps } from '@dtinsight/molecule/esm
 import { Header, Content } from '@dtinsight/molecule/esm/workbench/sidebar';
 import { ICollapseItem } from '@dtinsight/molecule/esm/components/collapse';
 import API from '../../api';
-import { Button, Input, Tree, Select } from 'antd'
+import { Button, Input, Tree, Select,List } from 'antd'
+import InfiniteScroll from 'react-infinite-scroll-component';
 import 'antd/dist/antd.dark.css';
 
 const Toolbar = molecule.component.Toolbar;
@@ -52,7 +53,7 @@ export function ManageProjectView() {
     const handleChange = (value: string) => {
         localStorage.setItem('current_proj', value);
         console.log(`selected ${value}`);
-      };
+    };
 
     const getCurrentProject = () => {
         return localStorage.getItem('current_proj');
@@ -67,7 +68,34 @@ export function ManageProjectView() {
             </Select>
 
             <p>当前项目:  {getCurrentProject()}</p>
-            
+
+
+        </div>
+    );
+}
+
+export function OverviewView() {
+    const fetchCallees = async () => {
+        const res = await API.getCallees();
+        setCallees(res);
+
+    }    
+    const [callees, setCallees] = useState([] )
+    return (
+        <div     style={{
+            height: 1000,
+            overflow: 'auto',
+            padding: '0 16px',
+            border: '1px solid rgba(140, 140, 140, 0.35)',
+          }}>
+            <Button onClick={() => fetchCallees()}>获取所有调用函数</Button>
+
+            <List
+                size="small"
+                dataSource={callees}
+                renderItem={item => <List.Item><Button>go</Button>{item}</List.Item>}  
+                 
+            />
 
         </div>
     );
@@ -84,9 +112,9 @@ export function CallGraphView() {
             newNode.data = {};
             newNode.data.fullMethod = node.method_full;
             newNode.title = node.method_full;
-            if (node.hasOwnProperty('lineNum')) {                
+            if (node.hasOwnProperty('lineNum')) {
                 newNode.data.lineNum = node.lineNum;
-            } 
+            }
             id++;
             newNode.key = id;
 
@@ -111,7 +139,7 @@ export function CallGraphView() {
         //console.log(res);
         const callgraph = transferCallerGraph2TreeJson(res);
         //console.log('=========ok');
-        setTreeData(callgraph);        
+        setTreeData(callgraph);
         /*
         if (res.message === 'success') {
             const callgraph = transferCallerGraph2TreeJson(res.data);
@@ -130,7 +158,7 @@ export function CallGraphView() {
 
     return (
         <div >
-            <Input onChange={(e)=>{setCallerMethod(e.target.value)}}></Input>
+            <Input onChange={(e) => { setCallerMethod(e.target.value) }}></Input>
             <Button onClick={() => fetchCallerGraph()}>获取数据</Button>
             <Tree
                 treeData={treeData}
@@ -152,6 +180,13 @@ function renderCollapse(): ICollapseItem[] {
             name: '管理项目',
             renderPanel: () => {
                 return (<ManageProjectView />)
+            }
+        },
+        {
+            id: 'overview',
+            name: '项目概要',
+            renderPanel: () => {
+                return (<OverviewView />)
             }
         },
         {
