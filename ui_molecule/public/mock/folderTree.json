@@ -29,7 +29,7 @@
                 "fileType": "File",
                 "location": "Molecule-Demo/index.html",
                 "isLeaf": true,
-                "data": { "language": "html", "value": "<div id=\"molecule\">Hello Molecule</div>" }
+                "data": { "language": "html", "value": "<div id=\"molecule\">Hello Molecule</div> \n12333333\n\n13333333333333" }
             }, {
                 "id": 4,
                 "name": "test.json",

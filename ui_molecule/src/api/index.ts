@@ -15,6 +15,9 @@ const api = {
         return http.get(`${basePath}/dataSource.json`);
     },
 
+    getCallerGraph() {
+        return http.get(`${basePath}/callerGraph.json`);
+    },    
     getDataSourceById(sourceId: string): Promise<DataSourceType> {
         return new Promise<DataSourceType>((resolve, reject) => {
             const mockDataSource: DataSourceType = {

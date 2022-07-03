@@ -1,0 +1,57 @@
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+        "method_hash": "KoFZ6IDQYNLAUkvo5RicpQ#031",
+        "method_full": "test.call_graph.method_call.TestMCCaller:test2c()",
+        "children": [
+            {
+                "method_hash": "Db1pSyrspiE6RZ-lBNYLRg#024",
+                "method_full": "java.lang.System:currentTimeMillis()",
+                "lineNum": 78
+            },
+            {
+                "method_hash": "Db1pSyrspiE6RZ-lBNYLRg#024",
+                "method_full": "java.lang.System:currentTimeMillis()",
+                "lineNum": 85
+            },
+            {
+                "method_hash": "bcB3E0Ite2EG8fsL_A-eTQ#02e",
+                "method_full": "test.call_graph.method_call.TestMCCaller:str()",
+                "lineNum": 91
+            },
+            {
+                "method_hash": "bcB3E0Ite2EG8fsL_A-eTQ#02e",
+                "method_full": "test.call_graph.method_call.TestMCCaller:str()",
+                "lineNum": 92
+            },
+            {
+                "method_hash": "Pwm-cwAg_fNT-QOITHc-Wg#051",
+                "method_full": "test.call_graph.method_call.TestMCCallee:test2(java.lang.String,java.lang.String)",
+                "lineNum": 94,
+                "children": [
+                    {
+                        "method_hash": "SP_MOiuKbyMirmBMygzpGw#040",
+                        "method_full": "test.call_graph.method_call.TestMCCallee:test1(java.lang.String)",
+                        "lineNum": 22
+                    },
+                    {
+                        "method_hash": "SP_MOfiuKbyMirmBMygzpGw#040",
+                        "method_full": "test.call_graph.method_call.TestMCCallee:test12(java.lang.String)",
+                        "lineNum": 22
+                    },
+                    {
+                        "method_hash": "SP_MOfifuKbyMirmBMygzpGw#040",
+                        "method_full": "test.call_graph.method_call.TestMCCallee:test13(java.lang.String)",
+                        "lineNum": 22
+                    },
+                    {
+                        "method_hash": "SP_MOfifuKbyMirmBMygzpGw#0402",
+                        "method_full": "test.call_graph.method_call.TestMCCallee:test14(java.lang.String)",
+                        "lineNum": 22
+                    }
+                ]
+            }
+        ]
+    }
+}
