@@ -67,6 +67,7 @@ export function ManageProjectView() {
             </Select>
 
             <p>当前项目:  {getCurrentProject()}</p>
+            
 
         </div>
     );
@@ -79,21 +80,13 @@ export function CallGraphView() {
     const transferCallerGraph2TreeJson = (callGraph: any) => {
         let id = 0
         function insertNodeIntoTree(node: any, newNode: any) {
-            if (node.hasOwnProperty('lineNum')) {
-                newNode.data = {};
-                newNode.data.fullMethod = node.method_full;
+            //console.log(node.method_full);
+            newNode.data = {};
+            newNode.data.fullMethod = node.method_full;
+            newNode.title = node.method_full;
+            if (node.hasOwnProperty('lineNum')) {                
                 newNode.data.lineNum = node.lineNum;
-                if (node.children != null) {
-                    newNode.children = new Array(node.children.length);
-                    for (let i = 0; i < node.children.length; i++) {
-                        newNode.children[i] = {}
-                        insertNodeIntoTree(node.children[i], newNode.children[i]);
-                    }
-                }
-            } else {
-                newNode.data = {};
-                newNode.data.fullMethod = node.method_full;
-            }
+            } 
             id++;
             newNode.key = id;
 
@@ -108,18 +101,23 @@ export function CallGraphView() {
 
         var newNode = {};
         insertNodeIntoTree(callGraph, newNode)
-        console.log(callGraph);
-        console.log(JSON.stringify(newNode, null, '\t'));
+        //console.log(callGraph);
+        //console.log(JSON.stringify(newNode, null, '\t'));
         return [newNode];
     }
     const fetchCallerGraph = async () => {
-        console.log(caller_method);
-        const res = await API.getCallerGraph();
+        //console.log(caller_method);
+        const res = await API.getCallerGraph(caller_method);
+        //console.log(res);
+        const callgraph = transferCallerGraph2TreeJson(res);
+        //console.log('=========ok');
+        setTreeData(callgraph);        
+        /*
         if (res.message === 'success') {
             const callgraph = transferCallerGraph2TreeJson(res.data);
             console.log(callgraph);
-            setTreeData(callgraph);
-        }
+            setTreeData([callgraph]);
+        }*/
     }
 
     const titleRender = ({ title, key, data }: any) => {

@@ -51,5 +51,6 @@
     "monaco-editor-webpack-plugin": "^6.0.0",
     "react-app-rewired": "^2.1.8"
   },
-  "homepage": "./"
+  "homepage": "./",
+  "proxy":"http://localhost:8080"
 }

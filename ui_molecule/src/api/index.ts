@@ -1,6 +1,7 @@
 import http from "../common/http";
 
-const basePath = './mock';
+//const basePath = './mock';
+const basePath = '';
 
 const api = {
     getFolderTree() {
@@ -15,8 +16,9 @@ const api = {
         return http.get(`${basePath}/dataSource.json`);
     },
 
-    getCallerGraph() {
-        return http.get(`${basePath}/callerGraph.json`);
+    getCallerGraph(method: string) {
+        //return http.get(`${basePath}/callerGraph.json`);
+        return http.get(`${basePath}/callee_graph?project_name=log4j&method=${method}`);
     },    
     getDataSourceById(sourceId: string): Promise<DataSourceType> {
         return new Promise<DataSourceType>((resolve, reject) => {

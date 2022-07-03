@@ -97,7 +97,7 @@ export class DataSourceSidebarView extends React.Component {
 
     async fetchCallerGraph() {
         console.log(this.state.callerMethod);
-        const res = await API.getCallerGraph();
+        const res = await API.getCallerGraph('');
         if (res.message === 'success') {           
             this.setState({
                 callerGraph: this.transferCallerGraph2TreeJson(res.data) || []

@@ -27,7 +27,6 @@ public class CallGraphController {
 
     @PostMapping("/project")
     public Result createProject(@RequestBody Project project) {
-        System.out.println(project.getName());
         DbOperator.getInstance().init(ConfManager.getConfInfo());
         String sql = "insert into project(name, jar_paths) values (?, ?)";
         List<Object[]> objectList = new ArrayList<>(1);
@@ -35,7 +34,6 @@ public class CallGraphController {
         objectList.add(object);
         if (DbOperator.getInstance().batchInsert(sql, objectList)) {
             Project proj = getProjectByName(project.getName());
-            System.out.println(proj.getJar_paths());
             return HandleResult.buildOk();
         } else {
             return HandleResult.buildFailed();
@@ -43,8 +41,8 @@ public class CallGraphController {
     }
 
     //获取某个函数向下调用链
-    @RequestMapping("/caller_graph")
-    public  String getCallerGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
+    @RequestMapping(value="/caller_graph", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getCallerGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
         System.out.println("caller_graph");
         ConfInfo confInfo = ConfManager.getConfInfo();
         confInfo.setAppName(project_name);
@@ -59,9 +57,8 @@ public class CallGraphController {
     }
 
     //获取单个函数向上调用链
-    @RequestMapping("/callee_graph")
+    @RequestMapping(value="/callee_graph", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getCalleeGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
-        System.out.println("callee_graph");
         ConfInfo confInfo = ConfManager.getConfInfo();
         confInfo.setAppName(project_name);
         confInfo.setCallGraphJarList(getProjectByName(project_name).getJar_paths());
@@ -70,7 +67,6 @@ public class CallGraphController {
         )));
         RunnerGenAllGraph4Callee runner = new RunnerGenAllGraph4Callee();
         runner.run();
-        System.out.println(runner.getCalleeGraphJson());
         return runner.getCalleeGraphJson();
     }
 
