@@ -9,6 +9,8 @@ import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4Caller;
 import com.gcf.callgraph.jacg.runner.RunnerWriteDb;
 import com.gcf.callgraph.web.model.*;
 import com.gcf.callgraph.web.utils.HandleResult;
+import com.gcf.callgraph.web.utils.SourceUtil;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -39,6 +41,7 @@ public class CallGraphController {
         }
     }
 
+    //获取某个函数向下调用链
     @RequestMapping("/caller_graph")
     public  String getCallerGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
         System.out.println("caller_graph");
@@ -54,6 +57,7 @@ public class CallGraphController {
         return runner.getCallerGraphJson();
     }
 
+    //获取单个函数向上调用链
     @RequestMapping("/callee_graph")
     public String getCalleeGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
         System.out.println("callee_graph");
@@ -79,7 +83,7 @@ public class CallGraphController {
     }
 
     @RequestMapping("/projects")
-    public  List<Project> getProjects() {
+    public  @ResponseBody List<Project> getProjects() {
         DbOperator.getInstance().init(ConfManager.getConfInfo());
         String sql = "select name, jar_paths from project";
         List<Map<String, Object>> list = DbOperator.getInstance().queryList(sql, null);
@@ -136,6 +140,9 @@ public class CallGraphController {
         DbOperator.getInstance().closeDs();
         return callees;
     }
+
+
+    //获取所有的调用外部函数列表
     @RequestMapping("/callee")
     public List<CallMethod> getCallee(@RequestParam("project_name") String project_name) {
         String sql = String.format("SELECT caller_full_method,caller_full_class_name, callee_full_method,caller_line_num" +

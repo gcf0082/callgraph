@@ -1,5 +1,6 @@
 package test.run_by_code;
 
+import com.gcf.callgraph.web.utils.SourceUtil;
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.ShortestPath;
 import org.apache.tinkerpop.gremlin.process.traversal.IO;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
@@ -155,6 +156,10 @@ public class TestTemp {
         System.out.println(g.V(1).values("xname"));
     }
 
-
+    @Test
+    public void test_getSoruce() {
+        String content = SourceUtil.getSourceContentByClassName("log4j", "org.apache.logging.log4j.core.filter.BurstFilter");
+        System.out.println(content);
+    }
 
 }
