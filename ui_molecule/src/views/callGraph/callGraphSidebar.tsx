@@ -170,7 +170,18 @@ export function CallGraphView() {
   
 
     const titleRender = ({ title, key, data }: any) => {
-        return <div>{data.lineNum}:{data.fullMethod}</div>;
+        let fullClassName = data.fullMethod.split(':')[0];
+        let method = data.fullMethod.split(':')[1];
+        let methodName = method.split('(')[0];
+        let classname = fullClassName.substring(fullClassName.lastIndexOf('.')+1);
+        let args = '()';
+        if (method.indexOf('()') == -1) {
+            args = '(..)';
+        }
+        return <div style={{color:'#9f9fa3'}}>
+            <span>{fullClassName}:</span>
+            <span  style={{fontWeight: 'bold'}}>{methodName}{args}</span>
+            </div>;
     }
 
     const onSelect = async(selectedKeys: any, info: any) => {
@@ -207,11 +218,11 @@ export function CallGraphView() {
                 molecule.editor.editorInstance.revealLineInCenter(res.lineNum);
                 molecule.editor.editorInstance.deltaDecorations([],[
                     {
-                        range: new Range(3, 1, 3, 1),
+                        range: new Range(res.lineNum, 1, res.lineNum, 1),
                         options: {
                             isWholeLine: true,
                             className: 'myContentClass',
-                            glyphMarginClassName: 'myGlyphMarginClass'
+                            glyphMarginClassName : 'myGlyphMarginClass'
                         }
                     }
                 ]
