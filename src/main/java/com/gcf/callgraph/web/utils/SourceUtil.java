@@ -10,7 +10,7 @@ import java.util.Iterator;
 public class SourceUtil {
     public static String getSourcePathByClassName(String projectName, String className) {
         File root = new File("code" + File.separator + projectName);
-        String filePath = className.replaceAll("\\.", "/") + ".java";
+        String filePath = className.split("\\$")[0].replaceAll("\\.", "/") + ".java";
         try {
 
             Collection files = FileUtils.listFiles(root, null, true);

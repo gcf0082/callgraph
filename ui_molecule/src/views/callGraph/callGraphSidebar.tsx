@@ -6,6 +6,7 @@ import { Header, Content } from '@dtinsight/molecule/esm/workbench/sidebar';
 import { ICollapseItem } from '@dtinsight/molecule/esm/components/collapse';
 import API from '../../api';
 import { Button, Input, Tree, Select,List} from 'antd'
+import {Position, Range} from '@dtinsight/molecule/esm/monaco';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import 'antd/dist/antd.dark.css';
 import { NONAME } from 'dns';
@@ -106,8 +107,9 @@ export function CallGraphView() {
     const [treeData, setTreeData] = useState([] as any);
     const [caller_method, setCallerMethod] = useState('');
 
-    const transferCallerGraph2TreeJson = (callGraph: any) => {
-        let id = 0
+    const transferCallGraph2TreeJson = (callGraph: any, callerFlag:boolean) => {   
+        let id = 0;
+        let parentNode:any = null;             
         function insertNodeIntoTree(node: any, newNode: any) {
             //console.log(node.method_full);
             newNode.data = {};
@@ -116,10 +118,16 @@ export function CallGraphView() {
             if (node.hasOwnProperty('lineNum')) {
                 newNode.data.lineNum = node.lineNum;
             }
+            if (callerFlag && parentNode != null) {
+                newNode.data.callerMethod = parentNode.method_full;
+            }
             id++;
             newNode.key = id;
 
             if (node.children != null) {
+                if (callerFlag) {
+                    parentNode = node;
+                }                
                 newNode.children = new Array(node.children.length);
                 for (let i = 0; i < node.children.length; i++) {
                     newNode.children[i] = {}
@@ -138,29 +146,85 @@ export function CallGraphView() {
         //console.log(caller_method);
         const res = await API.getCallerGraph(caller_method);
         //console.log(res);
-        const callgraph = transferCallerGraph2TreeJson(res);
-        //console.log('=========ok');
+        const callgraph = transferCallGraph2TreeJson(res, true);
+        console.log(callgraph);
         setTreeData(callgraph);
-        /*
-        if (res.message === 'success') {
-            const callgraph = transferCallerGraph2TreeJson(res.data);
-            console.log(callgraph);
-            setTreeData([callgraph]);
-        }*/
     }
+
+    const fetchCalleeGraph = async () => {
+        //console.log(caller_method);
+        const res = await API.getCalleeGraph(caller_method);
+        //console.log(res);
+        const callgraph = transferCallGraph2TreeJson(res, false);
+        console.log(callgraph);
+        setTreeData(callgraph);
+    }      
+
+    const fetchSourceFile = async (project:string, className:string, linenum:number) => {
+        //console.log(caller_method);
+        const res = await API.getSourceFile(project, className, linenum);
+        console.log(res);
+        return res;
+    }    
+
+  
 
     const titleRender = ({ title, key, data }: any) => {
         return <div>{data.lineNum}:{data.fullMethod}</div>;
     }
 
-    const onSelect = (selectedKeys: any, info: any) => {
-        console.log('selected', selectedKeys, info);
+    const onSelect = async(selectedKeys: any, info: any) => {
+        if (info.node.data.lineNum == null) {
+            return;
+        }
+
+        let method = '';
+        if (info.node.data.callerMethod == null) {
+            method = info.node.data.fullMethod
+        } else {
+            method = info.node.data.callerMethod
+        }
+        const res = await API.getSourceFile('project', 
+        method.split(':')[0], 
+        info.node.data.lineNum);
+        console.log(res);  
+        const tabData: IEditorTab = {
+            id: info.node.key,
+            name: '查看代码',
+            data: {
+                path: 'ddd',
+                language:'java',
+                value: res.file_content,
+            },
+    
+        };              
+        console.log(info.node.data.fullMethod);
+        molecule.editor.open(tabData);       
+    
+        setTimeout(() => {
+            if (molecule.editor.editorInstance != null) {
+                molecule.editor.editorInstance.setPosition(new Position(res.lineNum,1));
+                molecule.editor.editorInstance.revealLineInCenter(res.lineNum);
+                molecule.editor.editorInstance.deltaDecorations([],[
+                    {
+                        range: new Range(3, 1, 3, 1),
+                        options: {
+                            isWholeLine: true,
+                            className: 'myContentClass',
+                            glyphMarginClassName: 'myGlyphMarginClass'
+                        }
+                    }
+                ]
+                    );
+            }
+        })
     };
 
     return (
         <div >
             <Input onChange={(e) => { setCallerMethod(e.target.value) }}></Input>
-            <Button onClick={() => fetchCallerGraph()}>获取数据</Button>
+            <Button onClick={() => fetchCalleeGraph()}>获取向上调用链据</Button>
+            <Button onClick={() => fetchCallerGraph()}>获取向下调用链据</Button>
             <Tree
                 treeData={treeData}
                 onSelect={onSelect}

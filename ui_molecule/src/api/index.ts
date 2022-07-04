@@ -15,12 +15,21 @@ const api = {
     getDataSource() {
         return http.get(`${basePath}/dataSource.json`);
     },
+
+    getSourceFile(project:string, className:string, linenum:number) {
+        return http.get(`${basePath}/source_file?project_name=log4j&class=${className}&linenum=${linenum}`);        
+    },    
     
     getCallees() {
         return http.get(`${basePath}/callees_method?project_name=log4j`);        
     },
-
+    
     getCallerGraph(method: string) {
+        //return http.get(`${basePath}/callerGraph.json`);
+        return http.get(`${basePath}/caller_graph?project_name=log4j&method=${method}`);
+    },
+
+    getCalleeGraph(method: string) {
         //return http.get(`${basePath}/callerGraph.json`);
         return http.get(`${basePath}/callee_graph?project_name=log4j&method=${method}`);
     },    
