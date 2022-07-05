@@ -173,14 +173,15 @@ export function CallGraphView() {
         let fullClassName = data.fullMethod.split(':')[0];
         let method = data.fullMethod.split(':')[1];
         let methodName = method.split('(')[0];
+        let packageName = fullClassName.substring(0,fullClassName.lastIndexOf('.'));
         let classname = fullClassName.substring(fullClassName.lastIndexOf('.')+1);
         let args = '()';
         if (method.indexOf('()') == -1) {
             args = '(..)';
         }
         return <div style={{color:'#9f9fa3'}}>
-            <span>{fullClassName}:</span>
-            <span  style={{fontWeight: 'bold'}}>{methodName}{args}</span>
+            <span>{packageName}.</span>
+            <span  style={{fontWeight: 'bold'}}>{classname}:{methodName}{args}</span>
             </div>;
     }
 
