@@ -11,10 +11,34 @@ import com.gcf.callgraph.web.model.*;
 import com.gcf.callgraph.web.utils.HandleResult;
 import com.gcf.callgraph.web.utils.SourceUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+
+class ProjectManager {
+    private static ProjectManager instance;
+
+    private String currentProject;
+    private ProjectManager (){}
+
+    public static ProjectManager getInstance() {
+        if (instance == null) {
+            instance = new ProjectManager();
+        }
+        return instance;
+    }
+
+
+    public String getCurrentProject() {
+        return currentProject;
+    }
+
+    public void setCurrentProject(String currentProject) {
+        this.currentProject = currentProject;
+    }
+}
 
 @RestController
 public class CallGraphController {
@@ -40,7 +64,7 @@ public class CallGraphController {
         }
     }
 
-    //è·å–æŸä¸ªå‡½æ•°å‘ä¸‹è°ƒç”¨é“¾
+    //»ñÈ¡Ä³¸öº¯ÊıÏòÏÂµ÷ÓÃÁ´
     @RequestMapping(value="/caller_graph", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getCallerGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
         System.out.println("caller_graph");
@@ -56,7 +80,7 @@ public class CallGraphController {
         return runner.getCallerGraphJson();
     }
 
-    //è·å–å•ä¸ªå‡½æ•°å‘ä¸Šè°ƒç”¨é“¾
+    //»ñÈ¡µ¥¸öº¯ÊıÏòÉÏµ÷ÓÃÁ´
     @RequestMapping(value="/callee_graph", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getCalleeGraph(@RequestParam("project_name") String project_name, @RequestParam("method") String method){
         ConfInfo confInfo = ConfManager.getConfInfo();
@@ -77,6 +101,20 @@ public class CallGraphController {
         confInfo.setCallGraphJarList(getProjectByName(project.getName()).getJar_paths());
         new RunnerWriteDb().run();
         return HandleResult.buildOk();
+    }
+
+    @PostMapping("/project/current")
+    public Result setCurrentProject(@RequestBody Project project) {
+        ProjectManager.getInstance().setCurrentProject(project.getName());
+        return HandleResult.buildOk();
+    }
+
+    @RequestMapping("/project/current")
+    public Project getCurrentProject() {
+        String projectName = ProjectManager.getInstance().getCurrentProject();
+        Project project = new Project();
+        project.setName(projectName);
+        return project;
     }
 
     @RequestMapping("/projects")
@@ -108,7 +146,7 @@ public class CallGraphController {
         return sourceFile;
     }
 
-    //è·å–æ‰€æœ‰è¢«è°ƒç”¨å‡½æ•°ååˆ—è¡¨
+    //»ñÈ¡ËùÓĞÍâ²¿±»µ÷ÓÃº¯ÊıÃûÁĞ±í
     @RequestMapping(value = "/callees_method", produces = MediaType.APPLICATION_JSON_VALUE)
     public  List<String> getAllCallees(@RequestParam("project_name") String project_name) {
         String sql = String.format("SELECT DISTINCT callee_full_method" +
@@ -139,7 +177,7 @@ public class CallGraphController {
     }
 
 
-    //è·å–æ‰€æœ‰çš„è°ƒç”¨å¤–éƒ¨å‡½æ•°åˆ—è¡¨,å¦‚æœæ˜¯å‡½æ•°ï¼ŒåŒ¹é…å‡½æ•°åå¼€å¤´
+    //»ñÈ¡ËùÓĞµÄµ÷ÓÃÍâ²¿º¯ÊıÁĞ±í;Èç¹û²ÎÊıÖ¸¶¨ÁËº¯Êı£¬ÔòÆ¥Åäº¯ÊıÃû¿ªÍ·µÄµ÷ÓÃº¯Êı
     @RequestMapping("/callee")
     public List<CallMethod> getCallee(@RequestParam("project_name") String project_name,
                                       @RequestParam(value="method", required = false) String method) {

@@ -11,6 +11,10 @@ import com.gcf.callgraph.jacg.runner.RunnerGenAllGraph4CallerSupportIgnore;
 public class TestRunnerGenAllGraph4CallerSupportIgnore {
 
     public static void main(String[] args) {
-        new RunnerGenAllGraph4CallerSupportIgnore().run();
+        RunnerGenAllGraph4CallerSupportIgnore runnerGenAllGraph4CallerSupportIgnore = new RunnerGenAllGraph4CallerSupportIgnore();
+        runnerGenAllGraph4CallerSupportIgnore.run();
+
+        String json = runnerGenAllGraph4CallerSupportIgnore.getCalleeGraphJson();
+        System.out.print(json);
     }
 }

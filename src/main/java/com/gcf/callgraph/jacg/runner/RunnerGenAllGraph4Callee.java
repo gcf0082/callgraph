@@ -1,6 +1,7 @@
 package com.gcf.callgraph.jacg.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gcf.callgraph.jacg.annotation.AnnotationStorage;
 import com.gcf.callgraph.jacg.common.DC;
@@ -8,6 +9,7 @@ import com.gcf.callgraph.jacg.common.JACGConstants;
 import com.gcf.callgraph.jacg.common.enums.OtherConfigFileUseSetEnum;
 import com.gcf.callgraph.jacg.common.enums.OutputDetailEnum;
 import com.gcf.callgraph.jacg.dto.node.TmpNode4Callee;
+import com.gcf.callgraph.jacg.dto.node.TmpNode4Caller;
 import com.gcf.callgraph.jacg.dto.task.CalleeTaskInfo;
 import com.gcf.callgraph.jacg.dto.task.CalleeTmpMethodInfo;
 import com.gcf.callgraph.jacg.dto.task.FindMethodInfo;
@@ -331,8 +333,73 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
         }
     }
 
-    // 记录一个被调用方法的调用链信息
+    protected boolean genAllGraph4Callee2(String calleeMethodHash,  String calleeFullMethod,  Stack<String> callstack, List handledMethods) throws IOException {
+        handledMethods.add(calleeMethodHash);
+        callstack.push(calleeMethodHash);
+        TmpNode4Callee currentNode = TmpNode4Callee.genNode(calleeMethodHash, null);
+        List<Map<String, Object>> callerMethods = queryCallerMethod(currentNode);
+        ArrayNode nodes = (ArrayNode)treeNode.get("nodes");
+        ObjectNode  node = mapper.createObjectNode();
+        node.put("id", calleeMethodHash);
+        node.put("fullMethod", calleeFullMethod);
+        node.put("simpleMethod", calleeFullMethod.substring(calleeFullMethod.indexOf(":")+1, calleeFullMethod.indexOf("(")));
+        ObjectNode nodeData = mapper.createObjectNode();
+        nodeData.set("data", node);
+        nodes.add(nodeData);
+        for(Map<String, Object> callerMethod:callerMethods) {
+            String callerMethodHash = (String) callerMethod.get(DC.MC_CALLER_METHOD_HASH);
+            String callerFullMethod = (String) callerMethod.get(DC.MC_CALLER_FULL_METHOD);
+            System.out.println(callerFullMethod + " -> " + calleeFullMethod);
+            String nodeId = callerMethodHash;
+            if (callstack.contains(callerMethodHash) && "SCC".equals(callerMethod.get(DC.MC_CALL_TYPE))) {
+                System.out.println("!!!cycle scc" + callerFullMethod + " -> " + calleeFullMethod);
+                continue;
+            }
+            if (handledMethods.contains(callerMethodHash)) {
+                nodeId = callerMethodHash+calleeMethodHash;
+            }
+            ObjectNode  node2 = mapper.createObjectNode();
+            node2.put("id", nodeId);
+            node2.put("fullMethod", callerFullMethod);
+            node2.put("simpleMethod", callerFullMethod.substring(callerFullMethod.indexOf(":")+1, callerFullMethod.indexOf("(")));
+            ObjectNode nodeData2 = mapper.createObjectNode();
+            nodeData2.set("data", node2);
+            nodes.add(nodeData2);
+            ArrayNode edges = (ArrayNode)treeNode.get("edges");
+            ObjectNode  edge = mapper.createObjectNode();
+            edge.put("id", nodeId+"_"+calleeMethodHash);
+            edge.put("source", nodeId);
+            edge.put("target", calleeMethodHash);
+            ObjectNode edgeData = mapper.createObjectNode();
+            edgeData.set("data", edge);
+            edges.add(edgeData);
+            if (callstack.contains(callerMethodHash)) {
+                System.out.println("!!!cycle" + callerFullMethod + " -> " + calleeFullMethod);
+                continue;
+            }
+            if (handledMethods.contains(callerMethodHash)) {
+                continue;
+            } else {
+                genAllGraph4Callee2(callerMethodHash,  callerFullMethod, callstack, handledMethods);
+            }
+        }
+        callstack.pop();
+        return true;
+    }
+
     private boolean recordOneCalleeMethod(String calleeClassName, String calleeMethodHash, String calleeFullMethod, BufferedWriter out4Method) throws IOException {
+        List handledMethods = new ArrayList<String>();
+        Stack<String> callstack = new Stack<String>();
+        mapper = new ObjectMapper();
+        treeNode = mapper.createObjectNode();
+        treeNode.set("nodes", mapper.createArrayNode());
+        treeNode.set("edges", mapper.createArrayNode());
+        genAllGraph4Callee2(calleeMethodHash, calleeFullMethod, callstack, handledMethods);
+        return true;
+    }
+
+    // 记录一个被调用方法的调用链信息
+    private boolean recordOneCalleeMethod_bak(String calleeClassName, String calleeMethodHash, String calleeFullMethod, BufferedWriter out4Method) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
 
         // 在文件第1行写入当前方法的完整信息
@@ -589,6 +656,19 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
         }
     }
 
+    private List<Map<String, Object>>  queryCallerMethod(TmpNode4Callee node) {
+        // 确定通过调用方法进行查询使用的SQL语句
+        String sql = chooseQueryByCalleeMethodSql(node.getCurrentCallerMethodHash());
+
+        List<Map<String, Object>> list;
+        if (node.getCurrentCallerMethodHash() == null) {
+            list = dbOperator.queryList(sql, new Object[]{node.getCurrentCalleeMethodHash()});
+        } else {
+            list = dbOperator.queryList(sql, new Object[]{node.getCurrentCalleeMethodHash(), node.getCurrentCallerMethodHash()});
+        }
+        return list;
+    }
+
     // 查询当前节点的一个上层调用方法
     private Map<String, Object> queryOneByCalleeMethod(TmpNode4Callee node) {
         // 确定通过调用方法进行查询使用的SQL语句
@@ -624,7 +704,7 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
                 // 确定查询被调用关系时所需字段
                 String callerColumns = chooseCallerColumns();
                 sql = "select " + callerColumns + " from " + JACGConstants.TABLE_PREFIX_METHOD_CALL + confInfo.getAppName() + " where " +
-                        DC.MC_CALLEE_METHOD_HASH + " = ? order by " + DC.MC_CALLER_METHOD_HASH + " limit 1";
+                        DC.MC_CALLEE_METHOD_HASH + " = ? order by " + DC.MC_CALLER_METHOD_HASH;
                 cacheSql(sqlKey, sql);
             }
             return sql;

@@ -19,6 +19,7 @@ public class TestMCCallee {
         int a;
         int b = 3;
         System.out.println(b);
+        TestMCCallee.test1("");
     }
 
     public static void test3(String str1, String str2, String str3) {
@@ -31,28 +32,29 @@ public class TestMCCallee {
         return "";
     }
 
-    public static void test_gcf_1() {
-        test_gcf_4();
+    public static void test_func_1() {
+        test_func_4();
     }
 
-    public static void test_gcf_2() {
-        test_gcf_1();
+    public static void test_func_2() {
+        test_func_1();
     }
 
-    public static void test_gcf_3() {
-        test_gcf_1();
-        test_gcf_5();
+    public static void test_func_3() {
+        test_func_1();
+        test_func_5();
     }
 
-    public static void test_gcf_4() {
-        test_gcf_3();
+    public static void test_func_4() {
+        test_func_3();
     }
 
-    public static void test_gcf_5() {
-        test_gcf_4();
+    public static void test_func_5() {
+
+        //test_func_4();
     }
 
-    public static void test_gcf_6() {
-        test_gcf_5();
-    }
+    /*public static void test_func_6() {
+        test_func_5();
+    }*/
 }

@@ -1,6 +1,7 @@
 package com.gcf.callgraph.jacg.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gcf.callgraph.jacg.annotation.AnnotationStorage;
 import com.gcf.callgraph.jacg.common.DC;
@@ -796,13 +797,130 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
      * 根据指定的调用者方法HASH，查找所有被调用方法信息
      *
      * @param callerMethodHash
+     * @param callerFullMethod 仅代表调用当前方法时的调用者方法，不代表以下while循环中每次处理到的调用者方法
+     * @return
+     */
+    protected boolean genAllGraph4Caller2(String callerMethodHash,  String callerFullMethod,  Stack<String> callstack, List handledMethods) throws IOException {
+        int currentLineNumStart = JACGConstants.LINE_NUM_NONE;
+        int currentLineNumEnd = JACGConstants.LINE_NUM_NONE;
+        handledMethods.add(callerMethodHash);
+        callstack.push(callerMethodHash);
+        TmpNode4Caller currentNode = TmpNode4Caller.genNode(callerMethodHash, JACGConstants.METHOD_CALL_ID_START);
+        List<Map<String, Object>> calleeMethods = queryCalleeMethod(currentNode, currentLineNumStart, currentLineNumEnd);
+        ArrayNode nodes = (ArrayNode)treeNode.get("nodes");
+        ObjectNode  node = mapper.createObjectNode();
+        node.put("id", callerMethodHash);
+        node.put("fullMethod", callerFullMethod);
+        node.put("simpleMethod", callerFullMethod.substring(callerFullMethod.indexOf(":")+1, callerFullMethod.indexOf("(")));
+        ObjectNode nodeData = mapper.createObjectNode();
+        nodeData.set("data", node);
+        nodes.add(nodeData);
+        for(Map<String, Object> calleeMethod:calleeMethods) {
+            String calleeMethodHash = (String) calleeMethod.get(DC.MC_CALLEE_METHOD_HASH);
+            String calleeFullMethod = (String) calleeMethod.get(DC.MC_CALLEE_FULL_METHOD);
+
+            if (callstack.contains(calleeMethodHash)) {
+                System.out.println("!!!cycle" + callerFullMethod + " -> " + calleeFullMethod);
+                continue;
+            }
+            if (handledMethods.contains(calleeMethodHash)) {
+                continue;
+            } else {
+                System.out.println(callerFullMethod + " -> " + calleeFullMethod);
+                ArrayNode edges = (ArrayNode)treeNode.get("edges");
+                ObjectNode  edge = mapper.createObjectNode();
+                edge.put("id", callerMethodHash+"_"+calleeMethodHash);
+                edge.put("source", callerMethodHash);
+                edge.put("target", calleeMethodHash);
+                ObjectNode edgeData = mapper.createObjectNode();
+                edgeData.set("data", edge);
+                edges.add(edgeData);
+                genAllGraph4Caller2(calleeMethodHash,  calleeFullMethod, callstack, handledMethods);
+            }
+        }
+        callstack.pop();
+        return true;
+    }
+
+    //这个版本是每个函数都显示
+    protected boolean genAllGraph4Caller3(String callerMethodHash,  String callerFullMethod,  Stack<String> callstack, List handledMethods) throws IOException {
+        int currentLineNumStart = JACGConstants.LINE_NUM_NONE;
+        int currentLineNumEnd = JACGConstants.LINE_NUM_NONE;
+        handledMethods.add(callerMethodHash);
+        callstack.push(callerMethodHash);
+        TmpNode4Caller currentNode = TmpNode4Caller.genNode(callerMethodHash, JACGConstants.METHOD_CALL_ID_START);
+        List<Map<String, Object>> calleeMethods = queryCalleeMethod(currentNode, currentLineNumStart, currentLineNumEnd);
+        ArrayNode nodes = (ArrayNode)treeNode.get("nodes");
+        ObjectNode  node = mapper.createObjectNode();
+        node.put("id", callerMethodHash);
+        node.put("fullMethod", callerFullMethod);
+        node.put("simpleMethod", callerFullMethod.substring(callerFullMethod.indexOf(":")+1, callerFullMethod.indexOf("(")));
+        ObjectNode nodeData = mapper.createObjectNode();
+        nodeData.set("data", node);
+        nodes.add(nodeData);
+        for(Map<String, Object> calleeMethod:calleeMethods) {
+            String calleeMethodHash = (String) calleeMethod.get(DC.MC_CALLEE_METHOD_HASH);
+            String calleeFullMethod = (String) calleeMethod.get(DC.MC_CALLEE_FULL_METHOD);
+            System.out.println(callerFullMethod + " -> " + calleeFullMethod);
+            String nodeId = calleeMethodHash;
+            if (handledMethods.contains(calleeMethodHash)) {
+                nodeId = calleeMethodHash+callerMethodHash;
+            }
+            ObjectNode  node2 = mapper.createObjectNode();
+            node2.put("id", nodeId);
+            node2.put("fullMethod", calleeFullMethod);
+            node2.put("simpleMethod", calleeFullMethod.substring(calleeFullMethod.indexOf(":")+1, calleeFullMethod.indexOf("(")));
+            ObjectNode nodeData2 = mapper.createObjectNode();
+            nodeData2.set("data", node2);
+            nodes.add(nodeData2);
+            ArrayNode edges = (ArrayNode)treeNode.get("edges");
+            ObjectNode  edge = mapper.createObjectNode();
+            edge.put("id", callerMethodHash+"_"+calleeMethodHash);
+            edge.put("source", callerMethodHash);
+            edge.put("target", nodeId);
+            ObjectNode edgeData = mapper.createObjectNode();
+            edgeData.set("data", edge);
+            edges.add(edgeData);
+            if (callstack.contains(calleeMethodHash)) {
+                System.out.println("!!!cycle" + callerFullMethod + " -> " + calleeFullMethod);
+                continue;
+            }
+            if (handledMethods.contains(calleeMethodHash)) {
+                continue;
+            } else {
+                genAllGraph4Caller3(calleeMethodHash,  calleeFullMethod, callstack, handledMethods);
+            }
+        }
+        callstack.pop();
+        return true;
+    }
+
+    protected boolean genAllGraph4Caller(String callerMethodHash, BufferedWriter out, String callerFullMethod, int lineNumStart, int lineNumEnd) throws IOException {
+        int currentLineNumStart = JACGConstants.LINE_NUM_NONE;
+        int currentLineNumEnd = JACGConstants.LINE_NUM_NONE;
+        List handledMethods = new ArrayList<String>();
+        Stack<String> callstack = new Stack<String>();
+        mapper = new ObjectMapper();
+        treeNode = mapper.createObjectNode();
+        treeNode.set("nodes", mapper.createArrayNode());
+        treeNode.set("edges", mapper.createArrayNode());
+        genAllGraph4Caller3(callerMethodHash, callerFullMethod, callstack, handledMethods);
+        return true;
+    }
+
+
+
+    /**
+     * 根据指定的调用者方法HASH，查找所有被调用方法信息
+     *
+     * @param callerMethodHash
      * @param out
      * @param callerFullMethod 仅代表调用当前方法时的调用者方法，不代表以下while循环中每次处理到的调用者方法
      * @param lineNumStart
      * @param lineNumEnd
      * @return
      */
-    protected boolean genAllGraph4Caller(String callerMethodHash, BufferedWriter out, String callerFullMethod, int lineNumStart, int lineNumEnd) throws IOException {
+    protected boolean genAllGraph4Caller_bak(String callerMethodHash, BufferedWriter out, String callerFullMethod, int lineNumStart, int lineNumEnd) throws IOException {
         // 通过List记录当前遍历到的节点信息（当作不定长数组使用）
         List<TmpNode4Caller> node4CallerList = new ArrayList<>();
 
@@ -993,6 +1111,23 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
         return JACGConstants.NO_CYCLE_CALL_FLAG;
     }
 
+
+    private List<Map<String, Object>> queryCalleeMethod(TmpNode4Caller node, int currentLineNumStart, int currentLineNumEnd) {
+        // 确定通过被调用方法进行查询使用的SQL语句
+        String sql = chooseQueryCalleeMethodSql(currentLineNumStart, currentLineNumEnd);
+
+        List<Object> argList = new ArrayList<>(4);
+        argList.add(node.getCurrentCalleeMethodHash());
+        argList.add(node.getCurrentCalleeMethodId());
+        if (currentLineNumStart != JACGConstants.LINE_NUM_NONE && currentLineNumEnd != JACGConstants.LINE_NUM_NONE) {
+            argList.add(currentLineNumStart);
+            argList.add(currentLineNumEnd);
+        }
+
+        List<Map<String, Object>> list = dbOperator.queryList(sql, argList.toArray());
+        return list;
+    }
+
     // 查询当前节点的一个下层被调用方法
     private Map<String, Object> queryOneCalleeMethod(TmpNode4Caller node, int currentLineNumStart, int currentLineNumEnd) {
         // 确定通过被调用方法进行查询使用的SQL语句
@@ -1038,7 +1173,6 @@ public class RunnerGenAllGraph4Caller extends AbstractRunnerGenCallGraph {
             if (currentLineNumStart != JACGConstants.LINE_NUM_NONE && currentLineNumEnd != JACGConstants.LINE_NUM_NONE) {
                 sbSql.append(" and ").append(DC.MC_CALLER_LINE_NUM).append(" >= ? and ").append(DC.MC_CALLER_LINE_NUM).append(" <= ?");
             }
-            sbSql.append(" order by ").append(DC.MC_ID).append(" limit 1");
             sql = sbSql.toString();
             cacheSql(sqlKey, sql);
         }

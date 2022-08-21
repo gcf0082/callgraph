@@ -20,6 +20,8 @@ public abstract class TestRunByCodeBase {
     public void init() {
         ConfigureWrapper.addConfig(ConfigKeyEnum.CKE_APPNAME, "test_rbc");
         ConfigureWrapper.addConfig(ConfigKeyEnum.CKE_CALL_GRAPH_JAR_LIST, "build/libs/test.jar");
+        //ConfigureWrapper.addConfig(ConfigKeyEnum.CKE_CALL_GRAPH_JAR_LIST, "C:/temp/log4j/log4j-core-2.14.1.jar");
+        //ConfigureWrapper.addConfig(ConfigKeyEnum.CKE_CALL_GRAPH_JAR_LIST, "C:/temp/log4j/log4j-api-2.14.1.jar");
         ConfigureWrapper.addConfig(ConfigKeyEnum.CKE_INPUT_IGNORE_OTHER_PACKAGE, Boolean.TRUE.toString());
         ConfigureWrapper.addConfig(ConfigKeyEnum.CKE_CALL_GRAPH_OUTPUT_DETAIL, OutputDetailEnum.ODE_2.getDetail());
         ConfigureWrapper.addConfig(ConfigKeyEnum.CKE_THREAD_NUM, "20");
@@ -34,16 +36,13 @@ public abstract class TestRunByCodeBase {
         ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_IN_ALLOWED_CLASS_PREFIX, new HashSet(Arrays.asList(
                 "test.call_graph.method_call",
                 "test.call_graph.argument",
+                "test",
                 "java.")));
         ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLEE_CLASS_NAME, new HashSet(Arrays.asList(
-                "test.call_graph.method_call.TestMCCallee:test_gcf_4"
+                "test.call_graph.method_call.TestMCCallee:test_func_4"
                 )));
         ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLER_ENTRY_METHOD, new HashSet(Arrays.asList(
-                "TestMCCaller:test1a",
-                "TestMCCaller:test1b",
-                "TestMCCaller:test1c",
-                "TestArgument1:test",
-                "TestArgument2:test")));
+                "test.call_graph.method_call.TestMCCallee:test_func_1")));
         ConfigureWrapper.addOtherConfigSet(OtherConfigFileUseSetEnum.OCFUSE_OUT_GRAPH_FOR_CALLER_ENTRY_METHOD_IGNORE_PREFIX, new HashSet(Arrays.asList(
                 "test4i",
                 "test5")));

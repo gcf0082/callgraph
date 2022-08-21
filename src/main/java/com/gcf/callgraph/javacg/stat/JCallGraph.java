@@ -485,40 +485,44 @@ public class JCallGraph {
         for (Map.Entry<String, MethodAttribute> superMethodAttributeEntry : superMethodAttributeMap.entrySet()) {
             String superMethodWithArgs = superMethodAttributeEntry.getKey();
             MethodAttribute superMethodAttribute = superMethodAttributeEntry.getValue();
-            if (superMethodAttribute.isAbstractMethod()) {
-                // 处理父类抽象方法
-                childMethodAttributeMap.putIfAbsent(superMethodWithArgs, superMethodAttribute);
-                // 添加父类调用子类的方法调用
-                String superCallChildClassMethod = String.format(METHOD_CALL_FORMAT, callIdCounter.addAndGet(), superClassName, superMethodWithArgs,
-                        CallTypeEnum.CTE_SCC.getType(), childClassName, superMethodWithArgs, JavaCGConstants.DEFAULT_LINE_NUMBER);
-                writeResult(resultWriter, superCallChildClassMethod + " " + JavaCGConstants.DEFAULT_JAR_NUM);
-            } else if (superMethodAttribute.isPublicMethod() || superMethodAttribute.isProtectedMethod()) {
-                // 父类的public/protected且非抽象方法
-                if (childMethodAttributeMap.get(superMethodWithArgs) != null) {
+            //添加父类调用子类方法
+            String superCallChildClassMethod = String.format(METHOD_CALL_FORMAT, callIdCounter.addAndGet(), superClassName, superMethodWithArgs,
+                    CallTypeEnum.CTE_SCC.getType(), childClassName, superMethodWithArgs, JavaCGConstants.DEFAULT_LINE_NUMBER);
+            writeResult(resultWriter, superCallChildClassMethod + " " + JavaCGConstants.DEFAULT_JAR_NUM);
+            // 添加子类调用父类方法
+            String childCallSuperClassMethod = String.format(METHOD_CALL_FORMAT, callIdCounter.addAndGet(), childClassName, superMethodWithArgs,
+                    CallTypeEnum.CTE_CCS.getType(), superClassName, superMethodWithArgs, JavaCGConstants.DEFAULT_LINE_NUMBER);
+            writeResult(resultWriter, childCallSuperClassMethod + " " + JavaCGConstants.DEFAULT_JAR_NUM);
+        }
+
+    }
+
+    private void recordInterfaceCallClassMethod(Writer resultWriter) throws IOException {
+        if (classInterfaceMethodInfoMap.isEmpty() || interfaceMethodWithArgsMap.isEmpty()) {
+            return;
+        }
+
+        for (Map.Entry<String, ClassInterfaceMethodInfo> classMethodInfo : classInterfaceMethodInfoMap.entrySet()) {
+            String className = classMethodInfo.getKey();
+            ClassInterfaceMethodInfo classInterfaceMethodInfo = classMethodInfo.getValue();
+            List<String> interfaceNameList = classInterfaceMethodInfo.getInterfaceNameList();
+
+            // 找到在接口和实现类中都存在的，且有被调用的方法
+            for (String interfaceName : interfaceNameList) {
+                Set<String> calleeMethodWithArgsSet = calleeMethodMapGlobal.get(interfaceName);
+                if (calleeMethodWithArgsSet == null) {
                     continue;
                 }
-
-                if (!childClassMethodInfo.isAbstractClass() && !recordAll) {
-                    // 子类非抽象类，判断是否有被调用
-                    Set<String> childCalleeMethodWithArgsSet = calleeMethodMapGlobal.get(childClassName);
-                    if (childCalleeMethodWithArgsSet == null || !childCalleeMethodWithArgsSet.contains(superMethodWithArgs)) {
-                        // 子类未被调用，不添加
-                        continue;
-                    }
+                for (String classMethodWithArgs : calleeMethodWithArgsSet) {
+                    String interfaceCallClassMethod = String.format(METHOD_CALL_FORMAT, callIdCounter.addAndGet(), interfaceName, classMethodWithArgs,
+                            CallTypeEnum.CTE_ITF.getType(), className, classMethodWithArgs, JavaCGConstants.DEFAULT_LINE_NUMBER);
+                    writeResult(resultWriter, interfaceCallClassMethod + " " + JavaCGConstants.DEFAULT_JAR_NUM);
                 }
-
-                childMethodAttributeMap.put(superMethodWithArgs, superMethodAttribute);
-
-                // 添加子类调用父类方法
-                String childCallSuperClassMethod = String.format(METHOD_CALL_FORMAT, callIdCounter.addAndGet(), childClassName, superMethodWithArgs,
-                        CallTypeEnum.CTE_CCS.getType(), superClassName, superMethodWithArgs, JavaCGConstants.DEFAULT_LINE_NUMBER);
-                writeResult(resultWriter, childCallSuperClassMethod + " " + JavaCGConstants.DEFAULT_JAR_NUM);
             }
         }
     }
-
     // 记录接口调用实现类方法
-    private void recordInterfaceCallClassMethod(Writer resultWriter) throws IOException {
+    private void recordInterfaceCallClassMethod_bak(Writer resultWriter) throws IOException {
         if (classInterfaceMethodInfoMap.isEmpty() || interfaceMethodWithArgsMap.isEmpty()) {
             return;
         }
