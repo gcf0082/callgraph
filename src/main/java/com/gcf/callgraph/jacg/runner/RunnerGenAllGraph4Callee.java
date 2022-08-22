@@ -346,9 +346,12 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
         ObjectNode nodeData = mapper.createObjectNode();
         nodeData.set("data", node);
         nodes.add(nodeData);
-        for(Map<String, Object> callerMethod:callerMethods) {
+        for(Map<String, Object> callerMethod:callerMethods) 
+        {
             String callerMethodHash = (String) callerMethod.get(DC.MC_CALLER_METHOD_HASH);
             String callerFullMethod = (String) callerMethod.get(DC.MC_CALLER_FULL_METHOD);
+            String callerClass = (String) callerMethod.get(DC.MC_CALLER_FULL_CLASS_NAME);
+            int lineNumber = (int) callerMethod.get(DC.MC_CALLER_LINE_NUM);
             System.out.println(callerFullMethod + " -> " + calleeFullMethod);
             String nodeId = callerMethodHash;
             if (callstack.contains(callerMethodHash) && "SCC".equals(callerMethod.get(DC.MC_CALL_TYPE))) {
@@ -370,6 +373,8 @@ public class RunnerGenAllGraph4Callee extends AbstractRunnerGenCallGraph {
             edge.put("id", nodeId+"_"+calleeMethodHash);
             edge.put("source", nodeId);
             edge.put("target", calleeMethodHash);
+            edge.put("callerClass", callerClass);
+            edge.put("linenum", lineNumber);
             ObjectNode edgeData = mapper.createObjectNode();
             edgeData.set("data", edge);
             edges.add(edgeData);
